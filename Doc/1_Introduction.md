@@ -11,19 +11,4 @@ And i simply wanted to play around with the functional side of C# and generics. 
 
 I will share my experience about monads, making own IEnumerables/Enumerables (even single value), establish connection to Linq, see basic functional patterns and a lot of generics and delegates in action, and at last how to overload operators in a very unusual way.
 
-------------
-## Topics
-### [Background](Background.html)
-### [Monad interface](IMonad.html)
-### [Single value enumerator](SingleEnumerator.html)
-### [Maybe monad](Maybe.html)
-### [Identity monad ](Identity.html)
-### [List monad](ListMonad.html)
-### [Either monad (Decorator)](Either.html)
-### [Monads in action.](MonadsTest.html)
-### [Overloading operators with monad functions](OperatorOverloading.html)
-### [Conclusion](Conclusion.html)
-
-
-----------
 
