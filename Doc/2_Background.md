@@ -1,5 +1,3 @@
-###[Main](Index.html)_____________________________________________________________________________[Next: IMonad](IMonad.html)
-
 -------------------
 # Background
 What is a Functor, Applicative Functor and a Monad? 

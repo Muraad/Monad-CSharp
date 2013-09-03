@@ -1,4 +1,3 @@
-###[Main](Index.html)_____________________________________________________________________________[Next: Linq action](LinqTest.html)
 --------------
 #Monads in action
 
