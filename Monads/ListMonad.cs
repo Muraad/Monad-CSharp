@@ -1,10 +1,28 @@
-﻿using System;
+﻿/*
+ *  Copyright (C) 2013  Muraad Nofal
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Monads
+namespace FunctionalProgramming
 {
     public class ListMonad<A> : List<A>, IMonad<A>
     {
@@ -22,19 +40,19 @@ namespace Monads
         }
 
         // Combinate with multiplicate operator.
-        public static IMonad<A> operator *(ListMonad<A> firstM, Tuple<IMonad<Func<A, A, A>>, IMonad<A>> tupel )
+        public static ListMonad<A> operator *(ListMonad<A> firstM, Tuple<IMonad<Func<A, A, A>>, IMonad<A>> tupel)
         {
-            return firstM.Com<A, A>(tupel.Item1, tupel.Item2);
+            return (ListMonad<A>)firstM.Com<A, A>(tupel.Item1, tupel.Item2);
         }
 
-        public static IMonad<A> operator *(ListMonad<A> firstM, Tuple<IMonad<Func<A, A, IMonad<A>>>, IMonad<A>> tupel)
+        public static ListMonad<A> operator *(ListMonad<A> firstM, Tuple<IMonad<Func<A, A, IMonad<A>>>, IMonad<A>> tupel)
         {
-            return firstM.Com<A, A>(tupel.Item1, tupel.Item2);
+            return (ListMonad<A>)firstM.Com<A, A>(tupel.Item1, tupel.Item2);
         }
 
-        public static IMonad<A> operator /(ListMonad<A> firstM, Func<A, A> functionMonad)
+        public static ListMonad<A> operator /(ListMonad<A> firstM, Func<A, A> functionMonad)
         {
-            return firstM.Fmap(functionMonad);
+            return (ListMonad < A > )firstM.Fmap<A>(functionMonad);
         }
 
         public static IMonad<A> operator +(ListMonad<A> firstM, ListMonad<A> otherMonad)
