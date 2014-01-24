@@ -24,10 +24,18 @@ using System.Threading.Tasks;
 
 namespace FunctionalProgramming
 {
+    public static partial class Extensions
+    {
+        public static Maybe<T> ToMaybe<T>(this T value)
+        {
+            return new Just<T>(value);
+        }
+    }
 
     public class Just<T> : Maybe<T>
     {
-        public Just(T jValue) : base(jValue)
+        public Just(T jValue)
+            : base(jValue)
         {
         }
     }
@@ -62,12 +70,13 @@ namespace FunctionalProgramming
         public override string ToString()
         {
             string result = "";
-            if(isNothing)
+            if (isNothing)
                 result = "N<" + Return().GetType().Name + ">(" + Return().ToString() + ")";
             else
                 result = "J<" + Return().GetType().Name + ">(" + Return().ToString() + ")";
             return result;
         }
+
         protected Maybe()
         {
             aValue = default(A);        // Nothing/Default constructor creates default(A) as value.
@@ -91,7 +100,7 @@ namespace FunctionalProgramming
             }
         }
 
-        #endregion 
+        #endregion
 
         #region IMonad_Implementation
 
@@ -143,12 +152,12 @@ namespace FunctionalProgramming
                 {
                     if (function != null)
                     {
-                        if(result == null)  // if first time or first time (and second...) was Nothing
-                            result = function(aValue); 
+                        if (result == null)  // if first time or first time (and second...) was Nothing
+                            result = function(aValue);
                         else
                         {
                             var fResult = function(aValue);
-                            if(!(fResult is Nothing<B>))        // skip if result is nothing
+                            if (!(fResult is Nothing<B>))        // skip if result is nothing
                                 result = result.Concat(fResult);
                         }
                     }
@@ -156,8 +165,27 @@ namespace FunctionalProgramming
                 if (result == null) // If some function returned null
                     result = new Nothing<B>();
             }
-            
+
             return result;
+        }
+
+        public IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
+        {
+            if (isNothing)
+                return new Nothing<B>();
+            else
+                return func(aValue);
+        }
+
+        public Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        {
+            return (a) =>
+            {
+                if (isNothing)
+                    return new Nothing<C>();
+                else
+                    return fAtB(aValue).Bind(fBtC);
+            };
         }
 
         public IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
@@ -168,7 +196,7 @@ namespace FunctionalProgramming
             {
                 foreach (var function in functionMonad)
                 {
-                    if(function != null)
+                    if (function != null)
                         foreach (var otherValue in mOther)
                             result = function(aValue, otherValue);
                 }
@@ -257,6 +285,18 @@ namespace FunctionalProgramming
             return this;
         }
 
+        public IMonad<A> Add(A value)
+        {
+            /*Maybe<A> resultMonad = new Nothing<A>();
+            if (!isNothing)
+                resultMonad = new Just<A>(value);
+            return resultMonad;*/
+
+            if (!isNothing)
+                aValue = value;
+            return this;
+        }
+
         /// <summary>
         /// If this is not nothing, then the result monad is a new Maybe<A> with the value inside the other monad.
         /// </summary>
@@ -264,10 +304,14 @@ namespace FunctionalProgramming
         /// <returns>The new monad.</returns>
         public IMonad<A> Concat(IMonad<A> otherMonad)
         {
-            Maybe<A> resultMonad = new Nothing<A>();
+            /*Maybe<A> resultMonad = new Nothing<A>();
             if (!isNothing)
                 resultMonad = new Just<A>(otherMonad.Return());
-            return resultMonad;
+            return resultMonad;*/
+
+            if (!isNothing)
+                aValue = otherMonad.Return();
+            return this;
         }
 
         #endregion
@@ -320,7 +364,7 @@ namespace FunctionalProgramming
         public IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f)
         {
             IMonad<B> result = new Nothing<B>();
-            if(!this.isNothing)
+            if (!this.isNothing)
                 result = f(aValue);
             return result;
         }

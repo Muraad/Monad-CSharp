@@ -28,6 +28,10 @@ namespace FunctionalProgramming
     {
         public static void MaybePlayaround()
         {
+            Console.Out.WriteLine("\n-------------------------------------------------------------");
+            Console.Out.WriteLine("------------------------Maybe playground-----------------------");
+            Console.Out.WriteLine("-------------------------------------------------------------\n");
+
             // Just 5, use implicit operator for *Maybe* to make a Just directly.
             Maybe<int> justInt = 5;
             Console.WriteLine("A new Just<double>: " + justInt.ToString());
@@ -167,6 +171,10 @@ namespace FunctionalProgramming
 
         public static void ListMonadPlayground()
         {
+            Console.Out.WriteLine("\n-------------------------------------------------------------");
+            Console.Out.WriteLine("------------------------ListMonad playground-------------------");
+            Console.Out.WriteLine("-------------------------------------------------------------\n");
+
             Console.Out.WriteLine("Create two lists [1..5] and [J(1)..(J5)]: ");
             ListMonad<int> listMonadInt = new ListMonad<int>() 
                                             { 1, 2, 3, 4, 5 };
@@ -203,6 +211,8 @@ namespace FunctionalProgramming
                                                         counter++;
                                                         if (counter % 5 == 0)
                                                             Console.WriteLine("");
+                                                        if (counter % (5*5) == 0)
+                                                            Console.WriteLine("-----------------------------------------");
                                                     });
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
@@ -269,7 +279,7 @@ namespace FunctionalProgramming
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
 
-            Console.WriteLine("Combination with 'normal' result value and functions [+, -, *, /, %]: ");
+            Console.WriteLine("Combinate [1..5] and [1.0,..,9.0] 'normal' result value and functions [+, -, *, /, %]: ");
             counter = 0;
             listMonadInt.Com(listMonadIntDoubleDoubleFunc, listMonadDouble)
                             .Visit((x) =>
@@ -278,6 +288,8 @@ namespace FunctionalProgramming
                                 counter++;
                                 if (counter % 9 == 0)
                                     Console.WriteLine("");
+                                if (counter % (5 * 9) == 0)
+                                    Console.WriteLine("------------------------------------------------");
                             });
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
@@ -323,6 +335,8 @@ namespace FunctionalProgramming
                                 counter++;
                                 if (counter % 9 == 0)
                                     Console.WriteLine("");
+                                if (counter % (5 * 9) == 0)
+                                    Console.WriteLine("------------------------------------------------");
                             });
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
@@ -338,6 +352,8 @@ namespace FunctionalProgramming
                             counter++;
                             if (counter % 9 == 0)
                                 Console.WriteLine("");
+                            if (counter % (5 * 9) == 0)
+                                Console.WriteLine("------------------------------------------------");
                         });
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
@@ -356,7 +372,7 @@ namespace FunctionalProgramming
             Console.ReadLine();
 
             Console.WriteLine("Function applying with Linq: \n" + 
-                              " from f in {+, -, *, %, {x*y^2, x*y^3}}\n" +
+                              " from f in [+, -, *, %]\n" +
                               " from x in [1,..,5]\n" +
                               " from y in [1.0,..,9.0] \n"+
                               " select f(x,y) \n");
@@ -371,6 +387,8 @@ namespace FunctionalProgramming
                             counter++;
                             if (counter % 9 == 0)
                                 Console.WriteLine("");
+                            if (counter % (5 * 9) == 0)
+                                Console.WriteLine("------------------------------------------------");
                         });
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
@@ -387,6 +405,8 @@ namespace FunctionalProgramming
                 counter++;
                 if (counter % 9 == 0)
                     Console.WriteLine("");
+                if (counter % (5 * 9) == 0)
+                    Console.WriteLine("------------------------------------------------");
             });
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
@@ -395,6 +415,10 @@ namespace FunctionalProgramming
 
         public static void ListMonadOperatorPlayground()
         {
+            Console.Out.WriteLine("\n-------------------------------------------------------------");
+            Console.Out.WriteLine("------------------------Operator playground-------------------");
+            Console.Out.WriteLine("-------------------------------------------------------------\n");
+
             int counter = 0;
 
             Console.Out.WriteLine("Create two lists [0..9]: ");
@@ -558,14 +582,14 @@ namespace FunctionalProgramming
             // and only to show that its possible 
             // concat a Just(1000.0) and a Nothing<double> to the result list too.
             var resultFive = (listMonadDouble + listMonadDoubleTwo)
-                                .Concat(new Just<double>(1000.0))
-                                .Concat(new Nothing<double>());
+                                .Add(new Just<double>(1000.0))
+                                .Add(new Nothing<double>());
 
             var resultSix = (ListMonad<double>)resultFive;
 
             // This line is done the whole operatione!
             // Without one loop.
-            resultSix = resultSix / ((x) => { return x * 100.0; }) * funcMonadTupel *funcMonadTupelTwo;
+            //resultSix = resultSix / ((x) => { return x * 100.0; }) * funcMonadTupel *funcMonadTupelTwo;
 
             resultSix.Visit((x) =>
                             {
@@ -579,6 +603,64 @@ namespace FunctionalProgramming
                             });
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
+
+            var bindResult = "Hello World!".ToIdentity().Bind(                                                  a =>
+                                " This is a bind test".ToIdentity().Bind(                                       b =>
+                                    (new DateTime(2010, 1, 11)).ToMaybe().Bind(                                 c =>
+                                        (a + ", " + b.ToString() + ", " + c.ToShortDateString()).ToIdentity())));
+
+            Console.WriteLine(bindResult.Return());
+
+            Console.ReadLine();
+        }
+
+        public static void ListMonadBindTest()
+        {
+            var bindResult = "Hello World!".ToIdentity().Bind(a =>
+                                " This is a bind test".ToIdentity().Bind(b =>
+                                    (new DateTime(2010, 1, 11)).ToMaybe().Bind(c =>
+                                        (a + ", " + b.ToString() + ", " + c.ToShortDateString()).ToIdentity())));
+
+            Console.WriteLine(bindResult.Return());
+
+            Console.ReadLine();
+
+            var result =    from a in "Hello World!".ToIdentity()
+                            from b in 7.ToIdentity()
+                            from c in (new DateTime(2010, 1, 11)).ToIdentity()
+                            select a + ", " + b.ToString() + ", " + c.ToShortDateString();
+
+            Console.WriteLine(result.Return());
+
+            Console.ReadLine();
+        }
+
+        public static void ExtensionPlayGround()
+        {
+            Identity<int> x = 5;
+            Identity<int> y = 10;
+
+            Func<int, int, int> func = (a, b) => { return a + b; };
+
+            // lift the function into the monad. so it will have the signature
+            // Func<IMonad<int>, IMonad<int>, IMonad<int>> 
+            // use function with the two Identity<int>
+            // result will be Identity<int> again
+            var result = x.LiftM<int>(func)(x, y);
+
+            Console.WriteLine("Result of Identity(5) + Identity(10) using LiftM: ");
+            Console.WriteLine(" = " + result.Return());
+            Console.ReadLine();
+
+            bool equals = x.Any(y, (a, b) => { return a == b; });
+            Console.WriteLine("\nIdentity<5> equals Identity(10) ? = " + equals);
+            Console.ReadLine();
+
+            // The cast to int of argument b is not really neccessary
+            equals = x.Contains<int, double>(5.0, (a, b) => {return a == (int)b;});
+            Console.WriteLine("\nIdentity<5> equals 5.0 ? = " + equals);
+            Console.ReadLine();
+
         }
     }
 }

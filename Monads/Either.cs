@@ -55,255 +55,6 @@ namespace FunctionalProgramming
         T Value();
     }
 
-    public class EitherDecorator<L, R> : AMonadDecorator<L>, IMonad<R>
-    {
-        private Identity<L> left = new Identity<L>();
-        private Identity<R> right = new Identity<R>();
-
-        public EitherDecorator(L lValue, R rValue)
-        {
-            left = new Identity<L>(lValue);
-            right = new Identity<R>(rValue);
-        }
-
-        public void Value(ref L lValue)
-        {
-
-        }
-        public void Value(ref R rValue)
-        {
-
-        }
-
-        #region Right
-
-        public IMonad<B> Fmap<B>(Func<R, B> function)
-        {
-            return right.Fmap(function);
-        }
-
-        public IMonad<R> Pure(R parameter)
-        {
-            return right.Pure(parameter);
-        }
-
-        public R Return()
-        {
-            return right.Return();
-        }
-
-        public IMonad<B> App<B>(IMonad<Func<R, B>> functionMonad)
-        {
-            return right.App(functionMonad);
-        }
-
-        public IMonad<B> App<B>(IMonad<Func<R, IMonad<B>>> functionMonad)
-        {
-            return right.App(functionMonad);
-        }
-
-        public IMonad<C> Com<B, C>(IMonad<Func<R, B, C>> functionMonad, IMonad<B> mOther)
-        {
-            return right.Com(functionMonad, mOther);
-        }
-
-        public IMonad<C> Com<B, C>(IMonad<Func<R, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
-        {
-            return right.Com(functionMonad, mOther);
-        }
-
-        public IMonad<R> Visit(Action<R> function)
-        {
-            return right.Visit(function);
-        }
-
-        public IMonad<C> Com<B, C>(Func<R, B, C> function, IMonad<B> mOther)
-        {
-            return right.Com(function, mOther);
-        }
-
-        public IMonad<C> Com<B, C>(Func<R, B, IMonad<C>> function, IMonad<B> mOther)
-        {
-            return right.Com(function, mOther);
-        }
-
-        public IMonad<R> Concat(IMonad<R> otherMonad)
-        {
-            return right.Concat(otherMonad);
-        }
-
-        public IMonad<R> Where(Func<R, bool> predicate)
-        {
-            return right.Where(predicate);
-        }
-
-        public IMonad<R> Where(Func<R, int, bool> predicate)
-        {
-            return right.Where(predicate);
-        }
-
-        public IMonad<B> Select<B>(Func<R, B> f)
-        {
-            return right.Select(f);
-        }
-
-        public IMonad<B> Select<B>(Func<R, int, B> f)
-        {
-            return right.Select(f);
-        }
-
-        public IMonad<B> SelectMany<B>(Func<R, IMonad<B>> f)
-        {
-            return right.SelectMany(f);
-        }
-
-        public IMonad<B> SelectMany<B>(Func<R, int, IMonad<B>> f)
-        {
-            return right.SelectMany(f);
-        }
-
-        public IMonad<B> SelectMany<TMonad, B>(Func<R, IMonad<TMonad>> selector, Func<R, TMonad, B> function)
-        {
-            return right.SelectMany(selector, function);
-        }
-
-        public IMonad<B> SelectMany<TMonad, B>(Func<R, int, IMonad<TMonad>> selector, Func<R, TMonad, B> function)
-        {
-            return right.SelectMany(selector, function);
-        }
-
-        public  new IEnumerator<R> GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region Left
-
-        /*public override L Return()
-        {
-            return left.Return();
-        }*/
-
-        public override IMonad<B> Fmap<B>(Func<L, B> function)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<L> Pure(L parameter)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<B> App<B>(IMonad<Func<L, B>> functionMonad)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<B> App<B>(IMonad<Func<L, IMonad<B>>> functionMonad)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<C> Com<B, C>(IMonad<Func<L, B, C>> functionMonad, IMonad<B> mOther)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<C> Com<B, C>(IMonad<Func<L, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<L> Visit(Action<L> function)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<C> Com<B, C>(Func<L, B, C> function, IMonad<B> mOther)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<C> Com<B, C>(Func<L, B, IMonad<C>> function, IMonad<B> mOther)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<L> Concat(IMonad<L> otherMonad)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<B> Fmap<B>(Func<L, IMonad<B>> f)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<L> Where(Func<L, bool> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<L> Where(Func<L, int, bool> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<B> Select<B>(Func<L, B> f)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<B> Select<B>(Func<L, int, B> f)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<B> SelectMany<B>(Func<L, IMonad<B>> f)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<B> SelectMany<B>(Func<L, int, IMonad<B>> f)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<B> SelectMany<TMonad, B>(Func<L, IMonad<TMonad>> selector, Func<L, TMonad, B> function)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IMonad<B> SelectMany<TMonad, B>(Func<L, int, IMonad<TMonad>> selector, Func<L, TMonad, B> function)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-
-        public IMonad<R> Visit<B>(Action<R, B> action, IMonad<B> mOther)
-        {
-            foreach (var element in mOther)
-                action(right.Return(), element);
-            return this;
-        }
-
-        public override IMonad<L> Visit<B>(Action<L, B> action, IMonad<B> mOther)
-        {
-            foreach (var element in mOther)
-                action(left.Return(), element);
-            return this;
-        }
-    }
-
     public class Either<L, R> : Identity<L>, IMonad<R>
     {
         private Identity<R> right;
@@ -699,6 +450,22 @@ namespace FunctionalProgramming
                 foreach (B element in mOther)
                     action(right.Return(), element);
             return this;
+        }
+
+
+        public IMonad<B> Bind<B>(Func<R, IMonad<B>> func)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Func<R, IMonad<C>> Kleisli<B, C>(Func<R, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IMonad<R> Add(R value)
+        {
+            throw new NotImplementedException();
         }
     }
 }

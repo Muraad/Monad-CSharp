@@ -24,6 +24,14 @@ using System.Threading.Tasks;
 
 namespace FunctionalProgramming
 {
+    public static partial class Extensions
+    {
+        public static Identity<T> ToIdentity<T>(this T value)
+        {
+            return new Identity<T>(value);
+        }
+    }
+
     public class Identity<A> : IMonad<A>
     {
         private A idValue;
@@ -43,6 +51,12 @@ namespace FunctionalProgramming
             get { return idValue; }
             set { this.idValue = value; }
         }
+
+        public static implicit operator A(Identity<A> instance)
+        {
+            return instance.Return();
+        }
+
         public static implicit operator Identity<A>(A value)
         {
             return new Identity<A>(value);
@@ -90,6 +104,19 @@ namespace FunctionalProgramming
             if (resultMonad == null)
                 resultMonad = new Identity<B>();
             return resultMonad;
+        }
+
+        public IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
+        {
+            return func(idValue);
+        }
+
+        public Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        {
+            return (a) =>
+            {
+                return fAtB(idValue).Bind(fBtC);
+            };
         }
 
         public IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
@@ -169,6 +196,12 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
+        public IMonad<A> Add(A value)
+        {
+            idValue = value;
+            return this;
+        }
+
         public IMonad<A> Concat(IMonad<A> otherMonad)
         {
             this.idValue = otherMonad.Return();
@@ -243,5 +276,8 @@ namespace FunctionalProgramming
             return new SingleEnumerator<A>(idValue);
         }
         #endregion
+
+
+        
     }
 }

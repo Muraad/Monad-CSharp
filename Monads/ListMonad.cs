@@ -24,6 +24,22 @@ using System.Threading.Tasks;
 
 namespace FunctionalProgramming
 {
+    public static partial class Extensions
+    {
+        public static ListMonad<A> ToListMonad<A>(this A value)
+        {
+            return new ListMonad<A>() { value };
+        }
+
+        public static ListMonad<A> ToListMonad<A>(this IList<A> value)
+        {
+            ListMonad<A> result = new ListMonad<A>();
+            foreach (A element in value)
+                result.Add(element);
+            return result;
+        }
+    }
+
     public class ListMonad<A> : List<A>, IMonad<A>
     {
         #region Operator_overloading
@@ -157,6 +173,35 @@ namespace FunctionalProgramming
             return resultListMonad;
         }
 
+        public IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
+        {
+            IMonad<B> result = null;
+            foreach (A element in this)
+            {
+                if (result == null)
+                    result = func(element);
+                else
+                    result = result.Concat(func(element));
+            }
+            return result;
+        }
+
+        public Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        {
+            return (a) =>
+            {
+                IMonad<B> result = null;
+                foreach (A element in this)
+                {
+                    if (result == null)
+                        result = fAtB(element);
+                    else
+                        result = result.Concat(fAtB(element));
+                }
+                return result.Bind(fBtC);
+            };
+        }
+
         public IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
         {
             ListMonad<C> resultListMonad = new ListMonad<C>();
@@ -245,6 +290,12 @@ namespace FunctionalProgramming
                 resultListMonad.Add(element);
 
             return resultListMonad;
+        }
+
+        public IMonad<A> Add(A value)
+        {
+            Add(value);
+            return this;
         }
 
         #endregion

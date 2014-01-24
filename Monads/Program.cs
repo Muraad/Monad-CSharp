@@ -28,9 +28,11 @@ namespace FunctionalProgramming
     {
         static void Main(string[] args)
         {
-            Playground.MaybePlayaround();
-            Playground.ListMonadPlayground();
-            Playground.ListMonadOperatorPlayground();
+            //Playground.MaybePlayaround();
+            //Playground.ListMonadPlayground();
+            //Playground.ListMonadOperatorPlayground();
+            //Playground.ListMonadBindTest();
+            Playground.ExtensionPlayGround();
         }
     }
 }
