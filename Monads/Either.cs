@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 
 namespace FunctionalProgramming
 {
+    /*
     public class Right<T> : EitherValue<T>
     {
         T value;
@@ -55,6 +56,7 @@ namespace FunctionalProgramming
         T Value();
     }
 
+    
     public class Either<L, R> : Identity<L>, IMonad<R>
     {
         private Identity<R> right;
@@ -377,11 +379,6 @@ namespace FunctionalProgramming
             return base.SelectMany(selector, function);
         }
 
-        /*public new IEnumerator<L> GetEnumerator()
-        {
-            return base.GetEnumerator();
-        }*/
-
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return base.GetEnumerator();
@@ -436,11 +433,6 @@ namespace FunctionalProgramming
             return right.GetEnumerator();
         }
 
-        /*System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return right.GetEnumerator();
-        }*/
-
         #endregion
 
 
@@ -468,4 +460,6 @@ namespace FunctionalProgramming
             throw new NotImplementedException();
         }
     }
+
+*/
 }

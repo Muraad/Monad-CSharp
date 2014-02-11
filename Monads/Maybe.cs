@@ -30,6 +30,12 @@ namespace FunctionalProgramming
         {
             return new Just<T>(value);
         }
+
+        public static Maybe<T> ToMaybe<T>(this IMonad<T> value)
+        {
+            return value.Return();
+        }
+
     }
 
     public class Just<T> : Maybe<T>
@@ -104,7 +110,7 @@ namespace FunctionalProgramming
 
         #region IMonad_Implementation
 
-        public IMonad<B> Fmap<B>(Func<A, B> function)
+        public override IMonad<B> Fmap<B>(Func<A, B> function)
         {
             Maybe<B> resMaybe = new Nothing<B>();
             if (this is Just<A> && function != null)
@@ -114,18 +120,18 @@ namespace FunctionalProgramming
             return resMaybe;
         }
 
-        public IMonad<A> Pure(A parameter)
+        public override IMonad<A> Pure(A parameter)
         {
-            Maybe<A> result = parameter;        // Use implicit operator to make Just or Nothing 
-            return result;
+            aValue = parameter;        // Use implicit operator to make Just or Nothing 
+            return this;
         }
 
-        public A Return()
+        public override A Return()
         {
             return aValue;
         }
 
-        public IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad)
+        public override IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad)
         {
             Maybe<B> result = new Nothing<B>();
             if (this is Just<A> && functionMonad != null)
@@ -141,7 +147,7 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad)
+        public override IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad)
         {
             IMonad<B> result = new Nothing<B>();
             if (this is Just<A> && functionMonad != null)
@@ -158,7 +164,7 @@ namespace FunctionalProgramming
                         {
                             var fResult = function(aValue);
                             if (!(fResult is Nothing<B>))        // skip if result is nothing
-                                result = result.Concat(fResult);
+                                result = result.Concatenate(fResult);
                         }
                     }
                 }
@@ -169,7 +175,7 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
+        public override IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
         {
             if (isNothing)
                 return new Nothing<B>();
@@ -177,7 +183,7 @@ namespace FunctionalProgramming
                 return func(aValue);
         }
 
-        public Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        public override Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
         {
             return (a) =>
             {
@@ -188,7 +194,7 @@ namespace FunctionalProgramming
             };
         }
 
-        public IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
         {
             Maybe<C> result = new Nothing<C>();
 
@@ -207,14 +213,13 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
         {
             IMonad<C> result = new Nothing<C>();
 
             if (!isNothing && !(mOther is Nothing<B>))         // other is no maybe and this is not nothing.
             {
                 result = null;
-                //resultMaybe = functionMonad.Return()(aValue, mOther.Return());
                 foreach (var function in functionMonad)
                 {
                     foreach (var otherValue in mOther)
@@ -225,7 +230,7 @@ namespace FunctionalProgramming
                         {
                             var fResult = function(aValue, otherValue);
                             if (!(fResult is Nothing<B>))
-                                result = result.Concat(fResult);
+                                result = result.Concatenate(fResult);
                         }
                     }
                 }
@@ -236,7 +241,7 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther)
         {
             IMonad<C> resultMonad = new Nothing<C>();  // New Nothing<B> maybe
             if (!isNothing && !(mOther is Nothing<B>))
@@ -247,7 +252,7 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther)
         {
             IMonad<C> result = new Nothing<C>();  // New Nothing<B> maybe
             if (!isNothing && !(mOther is Nothing<B>))
@@ -261,7 +266,7 @@ namespace FunctionalProgramming
                     {
                         var fResult = function(aValue, otherValue);
                         if (!(fResult is Nothing<B>))
-                            result = result.Concat(fResult);
+                            result = result.Concatenate(fResult);
                     }
                 }
                 if (result == null)
@@ -270,14 +275,14 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public IMonad<A> Visit(Action<A> action)
+        public override IMonad<A> Visit(Action<A> action)
         {
             if (this is Just<A> && action != null)
                 action(aValue);
             return this;
         }
 
-        public IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther)
+        public override IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther)
         {
             if (this is Just<A> && action != null && mOther != null)
                 foreach (var element in mOther)
@@ -285,7 +290,7 @@ namespace FunctionalProgramming
             return this;
         }
 
-        public IMonad<A> Add(A value)
+        public override IMonad<A> Append(A value)
         {
             /*Maybe<A> resultMonad = new Nothing<A>();
             if (!isNothing)
@@ -302,7 +307,7 @@ namespace FunctionalProgramming
         /// </summary>
         /// <param name="otherMonad">The other monad.</param>
         /// <returns>The new monad.</returns>
-        public IMonad<A> Concat(IMonad<A> otherMonad)
+        public override IMonad<A> Concatenate(IMonad<A> otherMonad)
         {
             /*Maybe<A> resultMonad = new Nothing<A>();
             if (!isNothing)
@@ -318,12 +323,7 @@ namespace FunctionalProgramming
 
         #region IEnumerator_Implementation
 
-        public IEnumerator<A> GetEnumerator()
-        {
-            return new SingleEnumerator<A>(Return());
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        public override IEnumerator<A> GetEnumerator()
         {
             return new SingleEnumerator<A>(Return());
         }
@@ -332,7 +332,7 @@ namespace FunctionalProgramming
 
         #region Linq_Enumerable_Implementation
 
-        public IMonad<A> Where(Func<A, bool> predicate)
+        public override IMonad<A> Where(Func<A, bool> predicate)
         {
             Maybe<A> result = new Nothing<A>();
             if (!this.isNothing && predicate(aValue))
@@ -340,7 +340,7 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public IMonad<A> Where(Func<A, int, bool> predicate)
+        public override IMonad<A> Where(Func<A, int, bool> predicate)
         {
             Maybe<A> result = new Nothing<A>();
             if (!this.isNothing && predicate(aValue, 0))
@@ -348,12 +348,12 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public IMonad<B> Select<B>(Func<A, B> f)
+        public override IMonad<B> Select<B>(Func<A, B> f)
         {
             return Fmap<B>(f);
         }
 
-        public IMonad<B> Select<B>(Func<A, int, B> function)
+        public override IMonad<B> Select<B>(Func<A, int, B> function)
         {
             Maybe<B> resMaybe = new Nothing<B>();
             if (!this.isNothing)
@@ -361,7 +361,7 @@ namespace FunctionalProgramming
             return resMaybe;
         }
 
-        public IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f)
+        public override IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f)
         {
             IMonad<B> result = new Nothing<B>();
             if (!this.isNothing)
@@ -369,7 +369,7 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public IMonad<B> SelectMany<B>(Func<A, int, IMonad<B>> f)
+        public override IMonad<B> SelectMany<B>(Func<A, int, IMonad<B>> f)
         {
             IMonad<B> result = new Nothing<B>();
             if (!this.isNothing)
@@ -377,12 +377,12 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public IMonad<B> SelectMany<TMonad, B>(Func<A, IMonad<TMonad>> selector, Func<A, TMonad, B> function)
+        public override IMonad<B> SelectMany<TMonad, B>(Func<A, IMonad<TMonad>> selector, Func<A, TMonad, B> function)
         {
             return Com<TMonad, B>(function, SelectMany(selector));
         }
 
-        public IMonad<B> SelectMany<TMonad, B>(Func<A, int, IMonad<TMonad>> selector, Func<A, TMonad, B> function)
+        public override IMonad<B> SelectMany<TMonad, B>(Func<A, int, IMonad<TMonad>> selector, Func<A, TMonad, B> function)
         {
             return Com<TMonad, B>(function, SelectMany(selector));
         }

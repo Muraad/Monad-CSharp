@@ -1,0 +1,6 @@
+*.suo
+*.exe
+*.config
+*.cache
+Monads/obj/Debug/
+Monads/bin/

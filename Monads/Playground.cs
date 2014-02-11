@@ -110,9 +110,9 @@ namespace FunctionalProgramming
             Console.WriteLine("Only last value is returned because this Com function cannot break out of the Just.");
             Console.WriteLine();
             var functionListMonad = new ListMonad<Func<int, int, double>>();
-            functionListMonad.Add( (x, y) => { return x*y;});
-            functionListMonad.Add( (x, y) => { return x/ (y==0 ? 1 : y);});
-            functionListMonad.Add((x, y) => { return x % (y == 0 ? 1 : y); });
+            functionListMonad.Append( (x, y) => { return x*y;});
+            functionListMonad.Append( (x, y) => { return x/ (y==0 ? 1 : y);});
+            functionListMonad.Append((x, y) => { return x % (y == 0 ? 1 : y); });
             functionListMonad.Visit((x) => { Console.Out.WriteLine("Func: " + x); });
             var result = justInt.Com(functionListMonad, listMonadInt).Visit((x) => { Console.Out.Write(x + ", "); });
             Console.WriteLine("\n___________________________________________________________");
@@ -127,12 +127,12 @@ namespace FunctionalProgramming
                                 " with all result values is returned: ");
             Console.WriteLine();
             var functionListMonadTwo = new ListMonad<Func<int, double, IMonad<double>>>();
-            functionListMonadTwo.Add((x, y) => { return new ListMonad<double>() { x + y }; });
-            functionListMonadTwo.Add((x, y) => { return new ListMonad<double>() { x - y }; });
-            functionListMonadTwo.Add((x, y) => { return new ListMonad<double>(){x * y}; });
-            functionListMonadTwo.Add((x, y) => { return new ListMonad<double>(){x / (y == 0 ? 1 : y)}; });
-            functionListMonadTwo.Add((x, y) => { return new ListMonad<double>(){x % (y == 0 ? 1 : y)}; });
-            functionListMonadTwo.Add((x, y) => { return new Nothing<double>(); });
+            functionListMonadTwo.Append((x, y) => { return new ListMonad<double>() { x + y }; });
+            functionListMonadTwo.Append((x, y) => { return new ListMonad<double>() { x - y }; });
+            functionListMonadTwo.Append((x, y) => { return new ListMonad<double>(){x * y}; });
+            functionListMonadTwo.Append((x, y) => { return new ListMonad<double>(){x / (y == 0 ? 1 : y)}; });
+            functionListMonadTwo.Append((x, y) => { return new ListMonad<double>(){x % (y == 0 ? 1 : y)}; });
+            functionListMonadTwo.Append((x, y) => { return new Nothing<double>(); });
             int counter = 0;
             var resultTwo = justInt.Com(functionListMonadTwo, listMonadDouble)
                             .Visit((x) => {
@@ -230,11 +230,11 @@ namespace FunctionalProgramming
                                         (x) => { return new ListMonad<double>(){x+1, x-1}; };
 
             var listMonadIMonadIntDoubleFunc = new ListMonad<Func<int, IMonad<double>>>();
-            listMonadIMonadIntDoubleFunc.Add(intIMonadIntDoubleFunc1);
-            listMonadIMonadIntDoubleFunc.Add(intIMonadIntDoubleFunc2);
-            listMonadIMonadIntDoubleFunc.Add(intIMonadIntDoubleFunc3);
-            listMonadIMonadIntDoubleFunc.Add(intIMonadIntDoubleFunc4);
-            listMonadIMonadIntDoubleFunc.Add(intIMonadIntDoubleFunc5);
+            listMonadIMonadIntDoubleFunc.Append(intIMonadIntDoubleFunc1);
+            listMonadIMonadIntDoubleFunc.Append(intIMonadIntDoubleFunc2);
+            listMonadIMonadIntDoubleFunc.Append(intIMonadIntDoubleFunc3);
+            listMonadIMonadIntDoubleFunc.Append(intIMonadIntDoubleFunc4);
+            listMonadIMonadIntDoubleFunc.Append(intIMonadIntDoubleFunc5);
 
             Console.WriteLine("App [Just(x^2), Just(x^3), Just(x^4), Just(x^5) ListMonad{x+1, x-1} over [1,..,5]");
             listMonadInt.App(listMonadIMonadIntDoubleFunc).Visit((x) =>
@@ -441,11 +441,11 @@ namespace FunctionalProgramming
                                         (x) => { return new ListMonad<double>() { x + 1, x - 1 }; };
 
             var listMonadFunc1 = new ListMonad<Func<double, IMonad<double>>>();
-            listMonadFunc1.Add(doubleIMonadDoubleFun1);
-            listMonadFunc1.Add(doubleIMonadDoubleFun2);
-            listMonadFunc1.Add(doubleIMonadDoubleFun3);
-            listMonadFunc1.Add(doubleIMonadDoubleFun4);
-            listMonadFunc1.Add(doubleIMonadDoubleFun5);
+            listMonadFunc1.Append(doubleIMonadDoubleFun1);
+            listMonadFunc1.Append(doubleIMonadDoubleFun2);
+            listMonadFunc1.Append(doubleIMonadDoubleFun3);
+            listMonadFunc1.Append(doubleIMonadDoubleFun4);
+            listMonadFunc1.Append(doubleIMonadDoubleFun5);
 
             // Functions for combination 
             Func<double, double, double> doubleDoubleDoubleFunc1 =
@@ -582,8 +582,8 @@ namespace FunctionalProgramming
             // and only to show that its possible 
             // concat a Just(1000.0) and a Nothing<double> to the result list too.
             var resultFive = (listMonadDouble + listMonadDoubleTwo)
-                                .Add(new Just<double>(1000.0))
-                                .Add(new Nothing<double>());
+                                .Append(new Just<double>(1000.0))
+                                .Append(new Nothing<double>());
 
             var resultSix = (ListMonad<double>)resultFive;
 

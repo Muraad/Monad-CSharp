@@ -35,13 +35,23 @@ namespace FunctionalProgramming
         {
             ListMonad<A> result = new ListMonad<A>();
             foreach (A element in value)
+                result.Append(element);
+            return result;
+        }
+
+        public static ListMonad<T> ToListMonad<T>(this IMonad<T> value)
+        {
+            ListMonad<T> result = new ListMonad<T>();
+            foreach (T element in value)
                 result.Add(element);
             return result;
         }
     }
 
-    public class ListMonad<A> : List<A>, IMonad<A>
+    public class ListMonad<A> : IMonad<A>, IList<A> 
     {
+        private List<A> list = new List<A>();
+
         #region Operator_overloading
 
         // applicate with multiplicate operator.
@@ -73,7 +83,7 @@ namespace FunctionalProgramming
 
         public static IMonad<A> operator +(ListMonad<A> firstM, ListMonad<A> otherMonad)
         {
-            return firstM.Concat(otherMonad);
+            return firstM.Concatenate(otherMonad);
         }
 
         /// <summary>
@@ -109,11 +119,11 @@ namespace FunctionalProgramming
         /// <typeparam name="B">Type of the value inside the result ListMonad.</typeparam>
         /// <param name="function">The function to map over the values.</param>
         /// <returns>The result ListMonad<B></returns>
-        public IMonad<B> Fmap<B>(Func<A, B> function)
+        public override IMonad<B> Fmap<B>(Func<A, B> function)
         {
             ListMonad<B> resultEnumerable = new ListMonad<B>();
-            foreach (A element in this)
-                resultEnumerable.Add(function(element));
+            foreach (A element in list)
+                resultEnumerable.Append(function(element));
             return resultEnumerable;
         }
 
@@ -122,14 +132,17 @@ namespace FunctionalProgramming
         /// </summary>
         /// <param name="parameter">The value to put inside the new ListMonad.</param>
         /// <returns>A new ListMonad.</returns>
-        public IMonad<A> Pure(A parameter)
+        public override IMonad<A> Pure(A parameter)
         {
-            ListMonad<A> list = new ListMonad<A>();
+            //ListMonad<A> list = new ListMonad<A>();
+            //list.Append(parameter);
+            //return list;
+            list.Clear();
             list.Add(parameter);
-            return list;
+            return this;
         }
 
-        public IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad)
+        public override IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad)
         {
             ListMonad<B> resultListMonad = new ListMonad<B>();
             foreach (Func<A, B> function in functionMonad)
@@ -138,8 +151,8 @@ namespace FunctionalProgramming
                 // we could check for IMonad as Maybe and then check for isNothing, but then ListMonad have to "know" Maybe, i dont like that.
                 if (function != null)
                 {
-                    foreach (A element in this)     // calculate function result for each element in this ListFunctor<T>
-                        resultListMonad.Add(function(element));
+                    foreach (A element in list)
+                        resultListMonad.Append(function(element));
                 }
             }
             return resultListMonad;
@@ -152,7 +165,7 @@ namespace FunctionalProgramming
         /// <typeparam name="B">The type inside the result ListMonad.</typeparam>
         /// <param name="functionMonad">The monad that has functions inside.</param>
         /// <returns>The new ListMonad of type B.</returns>
-        public IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad)
+        public override IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad)
         {
             ListMonad<B> resultListMonad = new ListMonad<B>();
             foreach (Func<A, IMonad<B>> function in functionMonad)
@@ -161,140 +174,140 @@ namespace FunctionalProgramming
                 // we could check for IMonad as Maybe and then check for isNothing, but then ListMonad have to "know" Maybe, i dont like that.
                 if (function != null) 
                 {
-                    foreach (A element in this)     // calculate function result for each element in this ListFunctor<T>
+                    foreach (A element in list)     // calculate function result for each element in this ListFunctor<T>
                     {
                         //IMonad<B> funcResult = function(element);
                         //foreach (B resElement in funcResult)
                         foreach (B resElement in function(element))
-                            resultListMonad.Add(resElement);
+                            resultListMonad.Append(resElement);
                     }
                 }
             }
             return resultListMonad;
         }
 
-        public IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
+        public override IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
         {
             IMonad<B> result = null;
-            foreach (A element in this)
+            foreach (A element in list)
             {
                 if (result == null)
                     result = func(element);
                 else
-                    result = result.Concat(func(element));
+                    result = result.Concatenate(func(element));
             }
             return result;
         }
 
-        public Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        public override Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
         {
             return (a) =>
             {
                 IMonad<B> result = null;
-                foreach (A element in this)
+                foreach (A element in list)
                 {
                     if (result == null)
                         result = fAtB(element);
                     else
-                        result = result.Concat(fAtB(element));
+                        result = result.Concatenate(fAtB(element));
                 }
                 return result.Bind(fBtC);
             };
         }
 
-        public IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
         {
             ListMonad<C> resultListMonad = new ListMonad<C>();
             foreach (Func<A, B, C> f in functionMonad)
-                foreach (A a in this)
+                foreach (A a in list)
                     foreach (B b in mOther)
-                        resultListMonad.Add(f(a, b));
+                        resultListMonad.Append(f(a, b));
             return resultListMonad;
         }
 
-        public IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
         {
             ListMonad<C> resultListMonad = new ListMonad<C>();
             foreach (Func<A, B, IMonad<C>> f in functionMonad)
-                foreach (A a in this)
+                foreach (A a in list)
                     foreach (B b in mOther)
                     {
                         IMonad<C> fResult = f(a, b);
                         foreach (C c in fResult)
-                            resultListMonad.Add(c);
+                            resultListMonad.Append(c);
                     }
             return resultListMonad;
         }
 
-        public IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther)
         {
             ListMonad<C> resultListMonad = new ListMonad<C>();
 
-            foreach (A elementThis in this)
+            foreach (A elementThis in list)
                 foreach (B elementOther in mOther)
-                    resultListMonad.Add(function(elementThis, elementOther));
+                    resultListMonad.Append(function(elementThis, elementOther));
 
             return resultListMonad;
         }
-        public IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther)
+        
+        public override IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther)
         {
             ListMonad<C> resultListMonad = new ListMonad<C>();
 
-            foreach (A elementThis in this)
+            foreach (A elementThis in list)
             {
                 foreach (B elementOther in mOther)
                 {
                     var fResult = function(elementThis, elementOther);
                     foreach (C resultElement in fResult)
-                        resultListMonad.Add(resultElement);
+                        resultListMonad.Append(resultElement);
                 }
             }
 
             return resultListMonad;
         }
 
-        public IMonad<A> Visit(Action<A> function)
+        public override IMonad<A> Visit(Action<A> function)
         {
-            foreach (A element in this)
+            foreach (A element in list)
                 function(element);
             return this;
         }
 
-        public IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther)
+        public override IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther)
         {
-            foreach (var aElement in this)
+            foreach (var aElement in list)
                 foreach (var otherElement in mOther)
                     action(aElement, otherElement);
             return this;
         }
 
-        // Here is a "problem", this should return List<T> but this is a generall problem,
-        // because we cannt have a IFunctor<List<T>>
-        // because in c# you are not able to extend original List<T> with static methods AND let it implement (:) IFunctor<List<T>> at the same time.
-        // This would be very cool generally, becaus then Maybe would be IFunctor<Maybe<T>>
-        public A Return()
+        public override A Return()
         {
-            return this.First<A>();
+            return list[list.Count];
         }
 
-        public IMonad<A> Concat(IMonad<A> otherMonad)
+        public override IMonad<A> Concatenate(IMonad<A> otherMonad)
         {
-            ListMonad<A> resultListMonad = new ListMonad<A>();
+            //ListMonad<A> resultListMonad = new ListMonad<A>();
 
             // Copy all references in this ListMonad to the new ListMonad.
-            foreach(A element in this)
-                resultListMonad.Add(element);
+            //foreach (A element in list)
+            //    resultListMonad.Append(element);
 
             // Get all values from the other monad and put them in the result list monad too.
-            foreach (A element in otherMonad)
-                resultListMonad.Add(element);
+            //foreach (A element in otherMonad)
+            //    resultListMonad.Append(element);
 
-            return resultListMonad;
+            //return resultListMonad;
+            foreach (A element in otherMonad)
+                this.Add(element);
+            return this;
         }
 
-        public IMonad<A> Add(A value)
+        public override IMonad<A> Append(A value)
         {
-            Add(value);
+            list.Add(value);
             return this;
         }
 
@@ -302,80 +315,159 @@ namespace FunctionalProgramming
 
         #region Linq_Enumerable_Functions
 
-        public IMonad<A> Where(Func<A, bool> predicate)
+        public override IMonad<A> Where(Func<A, bool> predicate)
         {
             ListMonad<A> resultListMonad = new ListMonad<A>();
-            foreach (A element in this)
+            foreach (A element in list)
                 if (predicate(element))
-                    resultListMonad.Add(element);
+                    resultListMonad.Append(element);
             return resultListMonad;
         }
 
-        public IMonad<A> Where(Func<A, int, bool> predicate)
+        public override IMonad<A> Where(Func<A, int, bool> predicate)
         {
             throw new NotImplementedException();
         }
 
-        public IMonad<B> Select<B>(Func<A, B> f)
+        public override IMonad<B> Select<B>(Func<A, B> f)
         {
             return Fmap<B>(f);
         }
 
-        public IMonad<B> Select<B>(Func<A, int, B> function)
+        public override IMonad<B> Select<B>(Func<A, int, B> function)
         {
             ListMonad<B> resultMonad = new ListMonad<B>();
             int index = 0;
-            foreach (A element in this)
+            foreach (A element in list)
             {
-                resultMonad.Add(function(element, index));
+                resultMonad.Append(function(element, index));
                 index++;
             }
             return resultMonad;
         }
 
 
-        public IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f)
+        public override IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f)
         {
             ListMonad<B> resultListMonad = new ListMonad<B>();
-            foreach (A element in this)
-                resultListMonad.Concat(f(element));        // Get the value of type B out of the result IMonad<B>, no matter what monad the result is.
+            foreach (A element in list)
+                resultListMonad.Concatenate(f(element));        // Get the value of type B out of the result IMonad<B>, no matter what monad the result is.
             return resultListMonad;
         }
 
-        public IMonad<B> SelectMany<B>(Func<A, int, IMonad<B>> function)
+        public override IMonad<B> SelectMany<B>(Func<A, int, IMonad<B>> function)
         {
             ListMonad<B> resultListMonad = new ListMonad<B>();
             int index = 0;
-            foreach (A element in this)
+            foreach (A element in list)
             {
-                resultListMonad.Concat(function(element, index));        // Get the value of type B out of the result IMonad<B>, no matter what monad the result is.
+                resultListMonad.Concatenate(function(element, index));        // Get the value of type B out of the result IMonad<B>, no matter what monad the result is.
                 index++;
             }
             return resultListMonad;
         }
 
-        public IMonad<B> SelectMany<R, B>(Func<A, IMonad<R>> selector, Func<A, R, B> function)
+        public override IMonad<B> SelectMany<R, B>(Func<A, IMonad<R>> selector, Func<A, R, B> function)
         {
             ListMonad<B> resultListMonad = new ListMonad<B>();
-            foreach (A element in this)
+            foreach (A element in list)
                 foreach(R rValue in selector(element))          
-                    resultListMonad.Add(function(element, rValue));        // Get the value of type B out of the result IMonad<B>, no matter what monad the result is.
+                    resultListMonad.Append(function(element, rValue));        // Get the value of type B out of the result IMonad<B>, no matter what monad the result is.
             return resultListMonad;
         }
 
-        public IMonad<B> SelectMany<R, B>(Func<A, int, IMonad<R>> selector, Func<A, R, B> function)
+        public override IMonad<B> SelectMany<R, B>(Func<A, int, IMonad<R>> selector, Func<A, R, B> function)
         {
             ListMonad<B> resultListMonad = new ListMonad<B>();
             int index = 0;
-            foreach (A element in this)
+            foreach (A element in list)
             {
                 foreach (R rValue in selector(element, index))             // 
-                    resultListMonad.Add(function(element, rValue));        // Get the value of type B out of the result IMonad<B>, no matter what monad the result is.
+                    resultListMonad.Append(function(element, rValue));        // Get the value of type B out of the result IMonad<B>, no matter what monad the result is.
                 index++;
             }
             return resultListMonad;
         }
 
         #endregion
+
+        public int IndexOf(A item)
+        {
+            return list.IndexOf(item);
+        }
+
+        public void Insert(int index, A item)
+        {
+            list.Insert(index, item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            list.RemoveAt(index);
+        }
+
+        public A this[int index]
+        {
+            get
+            {
+                return list[index];
+            }
+            set
+            {
+                list[index] = value;
+            }
+        }
+
+        /*public new void Add(A item)
+        {
+            list.Add(item);
+        }*/
+
+        public void Clear()
+        {
+            list.Clear();
+        }
+
+        public bool Contains(A item)
+        {
+            return list.Contains(item);
+        }
+
+        public void CopyTo(A[] array, int arrayIndex)
+        {
+            list.CopyTo(array, arrayIndex);
+        }
+
+        public int Count
+        {
+            get { return list.Count; }
+        }
+
+        public bool IsReadOnly
+        {
+            get { return false; }
+        }
+
+        public bool Remove(A item)
+        {
+            return list.Remove(item);
+        }
+
+        public void Add(A item)
+        {
+            list.Add(item);
+        }
+
+        public override IEnumerator<A> GetEnumerator()
+        {
+            return list.GetEnumerator();
+        }
+
+
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return list.GetEnumerator();
+        }
     }
 }

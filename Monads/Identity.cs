@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2013  Muraad Nofal
+ *  Copyright (C) 2014  Muraad Nofal
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace FunctionalProgramming
 {
@@ -29,6 +32,11 @@ namespace FunctionalProgramming
         public static Identity<T> ToIdentity<T>(this T value)
         {
             return new Identity<T>(value);
+        }
+
+        public static Identity<T> ToIdentity<T>(this IMonad<T> value)
+        {
+            return new Identity<T>(value.Return());
         }
     }
 
@@ -64,22 +72,23 @@ namespace FunctionalProgramming
 
         #region IMonad_Interface_Implementation
 
-        public IMonad<B> Fmap<B>(Func<A, B> function)
+        public override IMonad<B> Fmap<B>(Func<A, B> function)
         {
             return new Identity<B>(function(idValue));
         }
 
-        public IMonad<A> Pure(A parameter)
+        public override IMonad<A> Pure(A parameter)
         {
-            return new Identity<A>(parameter);
+            idValue = parameter;
+            return this;
         }
 
-        public A Return()
+        public override A Return()
         {
             return idValue;
         }
 
-        public IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad)
+        public override IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad)
         {
             Identity<B> resultIdentity = new Identity<B>();
             foreach (var function in functionMonad)
@@ -88,7 +97,7 @@ namespace FunctionalProgramming
             return resultIdentity;
         }
 
-        public IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad)
+        public override IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad)
         {
             IMonad<B> resultMonad = null;
             foreach (var function in functionMonad)
@@ -98,7 +107,7 @@ namespace FunctionalProgramming
                     if (resultMonad == null)
                         resultMonad = function(idValue);
                     else
-                        resultMonad = resultMonad.Concat(function(idValue));
+                        resultMonad = resultMonad.Concatenate(function(idValue));
                 }
             }
             if (resultMonad == null)
@@ -106,12 +115,12 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
+        public override IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
         {
             return func(idValue);
         }
 
-        public Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        public override Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
         {
             return (a) =>
             {
@@ -119,7 +128,7 @@ namespace FunctionalProgramming
             };
         }
 
-        public IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
         {
             Identity<C> resultMonad = new Identity<C>();
 
@@ -131,7 +140,7 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
         {
             IMonad<C> resultMonad = null;
 
@@ -144,7 +153,7 @@ namespace FunctionalProgramming
                         if (resultMonad == null)
                             resultMonad = function(idValue, value);
                         else
-                            resultMonad = resultMonad.Concat(function(idValue, value));
+                            resultMonad = resultMonad.Concatenate(function(idValue, value));
                     }
                 }
             }
@@ -154,20 +163,20 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public IMonad<A> Visit(Action<A> action)
+        public override IMonad<A> Visit(Action<A> action)
         {
             action(idValue);
             return this;
         }
 
-        public IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther)
+        public override IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther)
         {
             foreach (var element in mOther)
                 action(idValue, element);
             return this;
         }
 
-        public IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther)
         {
             Identity<C> resultMonad = new Identity<C>();
 
@@ -180,7 +189,7 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther)
+        public override IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther)
         {
             IMonad<C> resultMonad = null;
 
@@ -188,7 +197,7 @@ namespace FunctionalProgramming
                 if (resultMonad == null)
                     resultMonad = function(idValue, value);
                 else
-                    resultMonad = resultMonad.Concat(function(idValue, value));
+                    resultMonad = resultMonad.Concatenate(function(idValue, value));
 
             if (resultMonad == null)
                 resultMonad = new Identity<C>();
@@ -196,13 +205,13 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public IMonad<A> Add(A value)
+        public override IMonad<A> Append(A value)
         {
             idValue = value;
             return this;
         }
 
-        public IMonad<A> Concat(IMonad<A> otherMonad)
+        public override IMonad<A> Concatenate(IMonad<A> otherMonad)
         {
             this.idValue = otherMonad.Return();
             return this;
@@ -212,7 +221,7 @@ namespace FunctionalProgramming
 
         #region Linq_Enumerable_Interface_implemenation
 
-        public IMonad<A> Where(Func<A, bool> predicate)
+        public override IMonad<A> Where(Func<A, bool> predicate)
         {
             IMonad<A> resultMonad = new Identity<A>();
             if (predicate(idValue))
@@ -220,7 +229,7 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public IMonad<A> Where(Func<A, int, bool> predicate)
+        public override IMonad<A> Where(Func<A, int, bool> predicate)
         {
             IMonad<A> resultMonad = new Identity<A>();
             if (predicate(idValue, 0))
@@ -228,34 +237,34 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public IMonad<B> Select<B>(Func<A, B> function)
+        public override IMonad<B> Select<B>(Func<A, B> function)
         {
             return Fmap<B>(function);
         }
 
-        public IMonad<B> Select<B>(Func<A, int, B> function)
+        public override IMonad<B> Select<B>(Func<A, int, B> function)
         {
             return new Identity<B>(function(idValue, 0));
         }
 
-        public IMonad<B> SelectMany<B>(Func<A, IMonad<B>> function)
+        public override IMonad<B> SelectMany<B>(Func<A, IMonad<B>> function)
         {
             return function(idValue);
         }
 
-        public IMonad<B> SelectMany<B>(Func<A, int, IMonad<B>> function)
+        public override IMonad<B> SelectMany<B>(Func<A, int, IMonad<B>> function)
         {
             return function(idValue, 0);
         }
 
-        public IMonad<B> SelectMany<R, B>(Func<A, IMonad<R>> selector, Func<A, R, B> function)
+        public override IMonad<B> SelectMany<R, B>(Func<A, IMonad<R>> selector, Func<A, R, B> function)
         {
             IMonad<R> tmp = selector(idValue);
             B result = function(idValue, tmp.Return());
             return new Identity<B>(result);
         }
 
-        public IMonad<B> SelectMany<R, B>(Func<A, int, IMonad<R>> selector, Func<A, R, B> function)
+        public override IMonad<B> SelectMany<R, B>(Func<A, int, IMonad<R>> selector, Func<A, R, B> function)
         {
             IMonad<R> tmp = selector(idValue, 0);
             B result = function(idValue, tmp.Return());
@@ -266,18 +275,12 @@ namespace FunctionalProgramming
 
         #region IEnumerator_Implementation
 
-        public IEnumerator<A> GetEnumerator()
+        public override IEnumerator<A> GetEnumerator()
         {
             return new SingleEnumerator<A>(idValue);
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return new SingleEnumerator<A>(idValue);
-        }
-        #endregion
-
-
-        
+        #endregion        
+   
     }
 }

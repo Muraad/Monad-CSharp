@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Linq.Expressions;
 
 namespace FunctionalProgramming
 {
@@ -117,7 +118,7 @@ namespace FunctionalProgramming
                 {
                     if (!comparer(element, value))
                     {
-                        result.Add(element);
+                        result.Append(element);
                         break;
                     }
                 }
@@ -135,7 +136,7 @@ namespace FunctionalProgramming
                 {
                     if (comparer(element, value))
                     {
-                        result.Add(element);
+                        result.Append(element);
                         break;
                     }
                 }
@@ -215,66 +216,396 @@ namespace FunctionalProgramming
         {
             return LiftM<A, A, A, A, A>(monad, func);
         }
+
+        #region Do_Write_Or_Read_Action_On_Model_Safe
+
+        public static IMonad<A> ActionW<A>(this IMonad<A> monad, Action expr, bool updateNext = true)
+        {
+            monad.Lock.EnterWriteLock();
+
+            try
+            {
+                expr();
+                if (updateNext)
+                    monad.UpdateValue();
+            }
+            catch (Exception exception)
+            {
+                monad.UpdateValue(exception);
+            }
+            finally
+            {
+                monad.Lock.ExitWriteLock();
+            }
+            return monad;
+        }
+
+        public static IMonad<A> ActionW<A>(this IMonad<A> monad, Action<IMonad<A>> expr, bool updateNext = true)
+        {
+            monad.Lock.EnterWriteLock();
+
+            try
+            {
+                expr(monad);
+                if (updateNext)
+                    monad.UpdateValue();
+            }
+            catch (Exception exception)
+            {
+                monad.UpdateValue(exception);
+            }
+            finally
+            {
+                monad.Lock.ExitWriteLock();
+            }
+            return monad;
+        }
+
+        public static IMonad<A> ActionR<A>(this IMonad<A> monad, Action<A> action)
+        {
+            monad.Lock.EnterReadLock();
+            try
+            {
+                monad.Visit(action);
+            }
+            catch (Exception exception)
+            {
+                monad.UpdateValue(exception);
+            }
+            finally
+            {
+                monad.Lock.ExitReadLock();
+            }
+            return monad;
+        }
+
+        #endregion
+
+        #region Call_Method_From_Model_By_Name_Write_And_Read_Safe
+
+        public static IMonad<A> MethodW<A>(this IMonad<A> monad, Func<IMonad<A>> expr, bool updateNext = true)
+        {
+            monad.Concatenate(monad.MethodW2<A, A>(expr, false));
+            if (updateNext)
+                monad.UpdateValue();
+            return monad;
+        }
+
+        public static IMonad<B> MethodW2<A, B>(this IMonad<A> monad, Func<IMonad<B>> expr, bool updateNext = true)
+        {
+            IMonad<B> result = null;
+            monad.Lock.EnterWriteLock();
+            try
+            {
+                result = expr();
+                if (updateNext)
+                    result.UpdateValue();
+            }
+            catch (Exception exception)
+            {
+                monad.UpdateValue(exception);
+            }
+            finally
+            {
+                monad.Lock.ExitWriteLock();
+            }
+            return result;
+        }
+
+        public static IMonad<A> MethodW<A>(this IMonad<A> monad, Func<A, IMonad<A>> expr, bool updateNext = true)
+        {
+
+            monad.Concatenate(monad.MethodW2<A, A>(expr, false));
+            if (updateNext)
+                monad.UpdateValue();
+            return monad;
+        }
+        public static IMonad<B> MethodW2<A, B>(this IMonad<A> monad, Func<A, IMonad<B>> expr, bool updateNext = true)
+        {
+            IMonad<B> result = null;
+            monad.Lock.EnterWriteLock();
+            try
+            {
+                result = expr(monad.Return());
+                if (updateNext)
+                    result.UpdateValue();
+            }
+            catch (Exception exception)
+            {
+                monad.UpdateValue(exception);
+            }
+            finally
+            {
+                monad.Lock.ExitWriteLock();
+            }
+            return result;
+        }
+
+        public static IMonad<A> MethodW<A>(this IMonad<A> monad, Func<IMonad<A>, IMonad<A>> expr, bool updateNext = true)
+        {
+            monad.Concatenate(monad.MethodW2<A, A>(expr, false));
+            if (updateNext)
+                monad.UpdateValue();
+            return monad;
+        }
+
+        public static IMonad<B> MethodW2<A, B>(this IMonad<A> monad, Func<IMonad<A>, IMonad<B>> expr, bool updateNext = true)
+        {
+            IMonad<B> result = null;
+            monad.Lock.EnterWriteLock();
+            try
+            {
+                result = expr(monad);
+                if (updateNext)
+                    result.UpdateValue();
+            }
+            catch (Exception exception)
+            {
+                monad.UpdateValue(exception);
+            }
+            finally
+            {
+                monad.Lock.ExitWriteLock();
+            }
+            return result;
+        }
+
+        #endregion
     }
 
-    public interface IMonad<A> : IEnumerable<A>
+    public abstract class IMonad<A> : IEnumerable<A>, IObservable<A>, IObserver<A>
     {
+
+        public IMonad<A> Set(IMonad<A> other)
+        {
+            return Pure(other.Return());
+        }
 
         #region IMonad_Core_Interface_Function_Definitions
 
+        private System.Threading.ReaderWriterLockSlim rwLock = new System.Threading.ReaderWriterLockSlim();
+        public System.Threading.ReaderWriterLockSlim Lock
+        {
+            get { return rwLock; }
+        }
+
         // Haskell fmap from Monad, maps a function over the value inside this monad.
-        IMonad<B> Fmap<B>(Func<A, B> function);
+        public abstract IMonad<B> Fmap<B>(Func<A, B> function);
 
         // Haskell pure from Monad. Puts a given value in the minimal context of this monad.
-        IMonad<A> Pure(A parameter);
+        public abstract IMonad<A> Pure(A parameter);
 
         // Bind function 
-        IMonad<B> Bind<B>(Func<A, IMonad<B>> func);
+        public abstract IMonad<B> Bind<B>(Func<A, IMonad<B>> func);
 
         // Kleisli-Operator
-        Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC);
+        public abstract Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC);
 
         // Haskell return from Monad. Returns the value inside this monad.
-        A Return();
+        public abstract A Return();
 
-        IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad);
+        public abstract IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad);
 
         // Haskell applicative function (operator) from Applicative. 
         // In Haskell its from a ApplicativeFunctor, but it is the same that a monad. The only established the ApplicativeFunctor later.
-        IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad);
+        public abstract IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad);
 
         // Combination
-        IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther);
-        IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther);
-        IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther);
-        IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther);
+        public abstract IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther);
+        public abstract IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther);
+        public abstract IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther);
+        public abstract IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther);
 
         // Usefull helper function. Do a action on every element in this monad, and return this at the end.
-        IMonad<A> Visit(Action<A> function);
-        IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther);
+        public abstract IMonad<A> Visit(Action<A> function);
+        public abstract IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther);
 
-        IMonad<A> Add(A value);
+        public abstract IMonad<A> Append(A value);
 
-        IMonad<A> Concat(IMonad<A> otherMonad);
+        public abstract IMonad<A> Concatenate(IMonad<A> otherMonad);
 
         #endregion
-
       
         #region Linq_Enumerable_Connection
 
-        IMonad<A> Where(Func<A, bool> predicate);   // filter.
-        IMonad<A> Where(Func<A, int, bool> predicate);
+        public abstract IMonad<A> Where(Func<A, bool> predicate);   // filter.
+        public abstract IMonad<A> Where(Func<A, int, bool> predicate);
 
-        IMonad<B> Select<B>(Func<A, B> f);       // fmap
-        IMonad<B> Select<B>(Func<A, Int32, B> f);   // fmap with index.
+        public abstract IMonad<B> Select<B>(Func<A, B> f);       // fmap
+        public abstract IMonad<B> Select<B>(Func<A, Int32, B> f);   // fmap with index.
 
-        IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f);          // bind
-        IMonad<B> SelectMany<B>(Func<A, Int32, IMonad<B>> f);
-        IMonad<B> SelectMany<TMonad, B>(Func<A, IMonad<TMonad>> selector, 
+        public abstract IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f);          // bind
+        public abstract IMonad<B> SelectMany<B>(Func<A, Int32, IMonad<B>> f);
+        public abstract IMonad<B> SelectMany<TMonad, B>(Func<A, IMonad<TMonad>> selector, 
                                         Func<A, TMonad, B> function);
-        IMonad<B> SelectMany<TMonad, B>(Func<A, Int32, IMonad<TMonad>> selector, 
+        public abstract IMonad<B> SelectMany<TMonad, B>(Func<A, Int32, IMonad<TMonad>> selector, 
                                         Func<A, TMonad, B> function);
 
         #endregion
+
+        public abstract IEnumerator<A> GetEnumerator();
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return new SingleEnumerator<A>(Return());
+        }
+
+        #region IObservable implementation
+
+        private List<IObserver<A>> observers = new List<IObserver<A>>();
+
+        public IDisposable Subscribe(IObserver<A> observer)
+        {
+            if (!observers.Contains(observer))
+                observers.Add(observer);
+            return new Unsubscriber(observers, observer);
+        }
+
+        private class Unsubscriber : IDisposable
+        {
+            private List<IObserver<A>> _observers;
+            private IObserver<A> _observer;
+
+            public Unsubscriber(List<IObserver<A>> observers, IObserver<A> observer)
+            {
+                this._observers = observers;
+                this._observer = observer;
+            }
+
+            public void Dispose()
+            {
+                if (_observer != null && _observers.Contains(_observer))
+                    _observers.Remove(_observer);
+            }
+        }
+
+        public void UpdateValue(Exception exc = null)
+        {
+            foreach (var observer in observers)
+            {
+                if (exc != null)
+                    observer.OnError(new NexValueUnknownException());
+                else
+                    observer.OnNext(this.Return());
+            }
+        }
+
+        public void UpdateValue(A next, Exception exc = null)
+        {
+            this.Append(next);
+            foreach (var observer in observers)
+            {
+                if (exc != null)
+                    observer.OnError(new NexValueUnknownException());
+                else
+                    observer.OnNext(next);
+            }
+        }
+
+        public async Task UpdateValueAsync(Exception exc = null)
+        {
+            Task[] tasks = new Task[observers.Count];
+            int index = 0;
+            foreach (var observer in observers)
+            {
+                tasks[index] = Task.Run(() =>
+                {
+                    if (exc != null)
+                        observer.OnError(new NexValueUnknownException());
+                    else
+                        observer.OnNext(this.Return());
+                });
+                index++;
+            }
+            await Task.WhenAll(tasks);
+        }
+
+        public async Task UpdateValueAsync(A next, Exception exc = null)
+        {
+            Task[] tasks = new Task[observers.Count];
+            int index = 0;
+            foreach (var observer in observers)
+            {
+                tasks[index] = Task.Run(() => {
+                                                if (exc != null)
+                                                    observer.OnError(new NexValueUnknownException());
+                                                else
+                                                    observer.OnNext(next);
+                                              });
+                index++;
+            }
+            await Task.WhenAll(tasks);
+        }
+
+        public void EndTransmission()
+        {
+            foreach (var observer in observers.ToArray())
+                if (observers.Contains(observer))
+                    observer.OnCompleted();
+
+            observers.Clear();
+        }
+
+        #endregion
+
+        #region IObserver implementation
+
+        private IDisposable unsubscriber = null;
+
+        public virtual void SubscribeAt(IObservable<A> provider)
+        {
+            if (provider != null)
+                unsubscriber = provider.Subscribe(this);
+        }
+
+        public Action<IMonad<A>> CompleteAction
+        {
+            get;
+            set;
+        }
+
+        public Action<IMonad<A>, Exception> ErrorAction
+        {
+            get;
+            set;
+        }
+
+        public Action<IMonad<A>, A> NextAction
+        {
+            get;
+            set;
+        }
+
+        public void OnCompleted()
+        {
+            if (CompleteAction != null)
+                CompleteAction(this);
+            this.Unsubscribe();
+        }
+
+        public void OnError(Exception error)
+        {
+            if (ErrorAction != null)
+                ErrorAction(this, error);
+        }
+
+        public void OnNext(A value)
+        {
+            if (NextAction != null)
+                NextAction(this, value);
+        }
+
+        public virtual void Unsubscribe()
+        {
+            unsubscriber.Dispose();
+        }
+
+        #endregion
+    }
+
+    public class NexValueUnknownException : Exception
+    {
+        internal NexValueUnknownException()
+        { }
     }
 }
