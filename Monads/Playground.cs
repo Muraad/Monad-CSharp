@@ -589,7 +589,7 @@ namespace FunctionalProgramming
 
             // This line is done the whole operatione!
             // Without one loop.
-            //resultSix = resultSix / ((x) => { return x * 100.0; }) * funcMonadTupel *funcMonadTupelTwo;
+            resultSix = resultSix / ((x) => { return x * 100.0; }) * funcMonadTupel *funcMonadTupelTwo;
 
             resultSix.Visit((x) =>
                             {
@@ -602,14 +602,6 @@ namespace FunctionalProgramming
                                     Console.WriteLine("-------------------------------------------");
                             });
             Console.WriteLine("\n___________________________________________________________");
-            Console.ReadLine();
-
-            var bindResult = "Hello World!".ToIdentity().Bind(                                                  a =>
-                                " This is a bind test".ToIdentity().Bind(                                       b =>
-                                    (new DateTime(2010, 1, 11)).ToMaybe().Bind(                                 c =>
-                                        (a + ", " + b.ToString() + ", " + c.ToShortDateString()).ToIdentity())));
-
-            Console.WriteLine(bindResult.Return());
 
             Console.ReadLine();
         }
@@ -662,5 +654,94 @@ namespace FunctionalProgramming
             Console.ReadLine();
 
         }
+
+
+        public static Func<string, int> func = (s) => { return s.Length; };
+        public static Func<IMonad<string>, IMonad<int>> monadFunc = (m) => { return m.Fmap(func); };
+        public static Func<IMonad<string>, Identity<string>> copyFunc = (id) => { return new Identity<string>(id.Return()); };
+        public static Func<string, string> setString = (s) => s += "foobar ";
+
+        public static void ObservableAndThreadSafeMethodsPlayGround()
+        {
+            Identity<string> id = "string";
+            Identity<string> observer = "";
+            id.Subscribe(observer);
+            observer.NextAction = (m, x) => Console.WriteLine("Received next: " + x);
+
+            Console.WriteLine("Setting to string 1 with ActionW((i) => i.Pure(\"1\"))");
+            id.ActionW((i) => i.Pure("1"));
+            Console.ReadLine();
+
+            Console.WriteLine("Setting to string 2 with ActionW(() => id.Pure(\"1\"))");
+            id.ActionW(() => id.Pure("2"));
+            Console.ReadLine();
+
+            // If the id monad is "here" (inside the same scope) we can use it directly inside the lambda.
+
+            Console.WriteLine("MethodW2(() => { return id.Fmap((s) => s.Length); })");
+            var result = id.MethodW2(() => { return id.Fmap((s) => s.Length); });
+            Console.WriteLine("Result: " + result);
+            Console.ReadLine();
+
+            Console.WriteLine("Adding string foobar with via fmap and setString function. ");
+            // Fmap returns a new monad because it cannot know that the returned type of the function 
+            // has the same type. Pure sets the value inside the Id to the new string.
+            id.MethodW(() => { return id.Pure(id.Fmap(setString).Return()); });
+            Console.ReadLine();
+
+            Console.WriteLine("Adding string foobar with via fmap and setString function. ");
+            id.MethodW((i) => { return i.Pure(i.Fmap(setString).Return()); });
+            Console.ReadLine();
+
+            Console.WriteLine("Adding string foobar: ");
+            id.MethodW(() => { return id.Pure(id.Fmap(setString).Return()); });
+            Console.ReadLine();
+
+            Console.WriteLine("Adding string foobar: ");
+            // ActionW always returns the monad it is used on.
+            // MethodW returns the type Imonad of the given lambda. So it can be a different monad.
+            // Here its doing the same.
+            id.ActionW(() => id.Pure(id.Fmap(setString).Return()));
+            Console.ReadLine();
+
+            Console.WriteLine("Adding string foobar: ");
+            id.ActionW((i) => i.Pure(i.Fmap(setString).Return()));
+            Console.ReadLine();
+
+
+            // Will return new Identity with = operator
+            //id.MethodW(() => { return id = (Identity<string>)id.Fmap(setString) ; });
+            //id.MethodW(() => { return id = id.Fmap(setString).Return(); });
+
+            id.MethodW2(() => { return id.Fmap(func); });
+            id.MethodW2((m) => { return m.Fmap(func); });
+            id.MethodW2(monadFunc);
+
+            // Only to show its possible.
+            // It simply returns the monad again.
+            //id.MethodW(() => id, false);
+            //id.MethodW((m) => m, false);
+
+            id.ActionW((i) => i.Pure("Clear"));
+            Console.WriteLine("Id value=" + id);
+            Console.ReadLine();
+
+            id.MethodW((m) => { return m.Pure("foobar"); });
+            Console.ReadLine();
+
+            //id.MethodW((str) => { str += "foobar"; return new Identity<string>(str); });
+            id.MethodW((m) => { return m.Pure(m.Return() + "foobar"); });
+            Console.ReadLine();
+
+            id.MethodW(() => { return new Identity<string>(id.Return()); }, false);
+            id.MethodW((m) => { return new Identity<string>(m.Return()); }, false);
+            id.MethodW(copyFunc, false);       // If copyFunc is Func<Identity<string>, Identity<string>>, this wont work.
+            //Identity<string> idCopy = (Identity<string>)id.MethodW(copyFunc);
+            Identity<string> idCopy = id.MethodW2(copyFunc, false).Return().ToIdentity();
+
+            Console.ReadLine();
+        }
+
+
     }
 }

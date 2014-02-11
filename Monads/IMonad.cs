@@ -389,21 +389,70 @@ namespace FunctionalProgramming
             get { return rwLock; }
         }
 
-        // Haskell fmap from Monad, maps a function over the value inside this monad.
+        /// <summary>
+        /// Simpler Fmap that takes a function thats return type is the same as the argument type.
+        /// Then it uses Concatenate to add the value(s) inside the result monad to this monad.
+        /// </summary>
+        /// <param name="function">The function to apply.</param>
+        /// <returns>The calling monad instance (this).</returns>
+        public virtual IMonad<A> Fmap(Func<A, A> function)
+        {
+            return Concatenate(Fmap<A>(function));
+        }
+
+        /// <summary>
+        /// Applys a function to the value(s) inside this monad. 
+        /// The results are packed into a new monad of the same type than the calling monad.
+        /// But with a generic type of the function result type.
+        /// </summary>
+        /// <typeparam name="B">The type of the function result.</typeparam>
+        /// <param name="function">The function.</param>
+        /// <returns>The new monad.</returns>
         public abstract IMonad<B> Fmap<B>(Func<A, B> function);
 
-        // Haskell pure from Monad. Puts a given value in the minimal context of this monad.
+        /// <summary>
+        /// Puts the given value inside of this monad. It does not return a new monad.
+        /// Its like a setter. Returning a new monad makes no sense in C#, because most times
+        /// the value inside the monad will be a reference type.
+        /// Monads like a list should clear their values before adding the new given value.
+        /// </summary>
+        /// <param name="parameter">The new value inside of this monad.</param>
+        /// <returns>this.</returns>
         public abstract IMonad<A> Pure(A parameter);
 
-        // Bind function 
+        /// <summary>
+        /// The same as fmap only that the function itself is returning the new monad.
+        /// </summary>
+        /// <typeparam name="B">The type of the value inside the returned monad.</typeparam>
+        /// <param name="func">The function.</param>
+        /// <returns>The new monad.</returns>
         public abstract IMonad<B> Bind<B>(Func<A, IMonad<B>> func);
 
-        // Kleisli-Operator
+        /// <summary>
+        /// The Kleisli-Operator for monads.
+        /// It transforms a function from A to monad B and a function from B to monad C
+        /// into a function from A to monad C directly.
+        /// Basically it does function composition.
+        /// </summary>
+        /// <typeparam name="B">Type.</typeparam>
+        /// <typeparam name="C">Type.</typeparam>
+        /// <param name="fAtB">Function from A to monad B.</param>
+        /// <param name="fBtC">Function from B to monad C</param>
+        /// <returns>Function from A to monad C.</returns>
         public abstract Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC);
 
-        // Haskell return from Monad. Returns the value inside this monad.
+        /// <summary>
+        /// Get the value inside this monad.
+        /// </summary>
+        /// <returns>The value.</returns>
         public abstract A Return();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="B"></typeparam>
+        /// <param name="functionMonad"></param>
+        /// <returns></returns>
         public abstract IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad);
 
         // Haskell applicative function (operator) from Applicative. 

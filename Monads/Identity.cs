@@ -70,6 +70,11 @@ namespace FunctionalProgramming
             return new Identity<A>(value);
         }
 
+        public override string ToString()
+        {
+            return "Id<" + Return().GetType().Name + ">(" + Return().ToString() + ")";
+        }
+
         #region IMonad_Interface_Implementation
 
         public override IMonad<B> Fmap<B>(Func<A, B> function)
