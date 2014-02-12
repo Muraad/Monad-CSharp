@@ -55,9 +55,9 @@ namespace FunctionalProgramming
                                     .Visit((x) => { Console.Out.Write(x + ", "); });
             Console.WriteLine("\n___________________________________________________________");
 
-            var intToDoubleFunctin = new Func<int, double>(x => { return x * 0.5; });
+            var intToDoubleFunction = new Func<int, double>(x => { return x * 0.5; });
             Console.WriteLine("A new Just with a function inside: f(x) = x * 0.5 ");
-            var justFunction = new Just<Func<int, double>>(intToDoubleFunctin);
+            var justFunction = new Just<Func<int, double>>(intToDoubleFunction);
             Console.WriteLine(justFunction.ToString());
             Console.WriteLine("___________________________________________________________");
             Console.ReadLine();
@@ -87,7 +87,7 @@ namespace FunctionalProgramming
 
 
             Console.Write("Fmap f(x) = x * 0.5 over the Just<int>(5): ");
-            var justDouble = justInt.Fmap(intToDoubleFunctin).Visit((x) => { Console.Out.Write(x + "\n"); });
+            var justDouble = justInt.Fmap(intToDoubleFunction).Visit((x) => { Console.Out.Write(x + "\n"); });
             Console.WriteLine("___________________________________________________________");
             Console.ReadLine();
 
@@ -187,8 +187,8 @@ namespace FunctionalProgramming
                                                         { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
             // Functions for Fmap and first App function.
-            Func<int, double> intDoubleFunc1 = (x) => { return 0.5 * (double)x; };
-            Func<int, double> intDoubleFunc2 = (x) => { return 0.7 * (double)x; };
+            Func<int, double> intDoubleFunc1 = (x) => { return 0.5 * x; };
+            Func<int, double> intDoubleFunc2 = (x) => { return 0.7 * x; };
 
             Console.WriteLine("Fmap f(x) = 0.5 * x over [1,..5,]");
             int counter = 0;
@@ -665,8 +665,13 @@ namespace FunctionalProgramming
         {
             Identity<string> id = "string";
             Identity<string> observer = "";
-            id.Subscribe(observer);
+            observer.Disposable = id.Subscribe(observer);
+            // or observer.SubscribeAt(id);
+
             observer.NextAction = (m, x) => Console.WriteLine("Received next: " + x);
+            id.Subscribe((s) => Console.WriteLine("Anonymour Observer Received next: " + s),
+                         (e) => Console.WriteLine(e.Message),
+                         () => Console.WriteLine("Completed"));
 
             Console.WriteLine("Setting to string 1 with ActionW((i) => i.Pure(\"1\"))");
             id.ActionW((i) => i.Pure("1"));
@@ -739,6 +744,7 @@ namespace FunctionalProgramming
             //Identity<string> idCopy = (Identity<string>)id.MethodW(copyFunc);
             Identity<string> idCopy = id.MethodW2(copyFunc, false).Return().ToIdentity();
 
+            id.EndTransmission();
             Console.ReadLine();
         }
 

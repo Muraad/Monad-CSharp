@@ -601,6 +601,17 @@ namespace FunctionalProgramming
 
         private IDisposable unsubscriber = null;
 
+        public IDisposable Disposable 
+        {
+            get
+            {
+                return unsubscriber;
+            }
+            set
+            {
+                unsubscriber = value;
+            }
+        }
         public virtual void SubscribeAt(IObservable<A> provider)
         {
             if (provider != null)
@@ -646,7 +657,8 @@ namespace FunctionalProgramming
 
         public virtual void Unsubscribe()
         {
-            unsubscriber.Dispose();
+            if(unsubscriber != null)
+                unsubscriber.Dispose();
         }
 
         #endregion
