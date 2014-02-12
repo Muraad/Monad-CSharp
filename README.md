@@ -40,17 +40,35 @@ A little intro how to use it:
 
   
 :
-
+    
     Identity<string> id = "string";
     Identity<string> observer = "";
-    id.Subscribe(observer);
-    observer.NextAction = (m, x) => Console.WriteLine("Received next: " + x);
-    
-    // Both next lines will change the value inside the id monad.
-    // The observer monads OnNext will be called.
-    id.ActionW((i) => i.Pure("1"));
+    observer.Disposable = id.Subscribe(observer);
+    // or observer.SubscribeAt(id);
 
+    observer.NextAction = (m, x) => Console.WriteLine("Received next: " + x);
+    observer.CompleteAction = (m) => Console.WriteLine("Completed, last value: " + m.Return();
+    observer.ErrorAction = (e) => Console.WriteLine(e.Message);
+    
+    // Using Subscribe from reactive extensions
+    id.Subscribe((s) => Console.WriteLine("Anonymour Observer Received next: " + s),
+                 (e) => Console.WriteLine(e.Message),
+                 () => Console.WriteLine("Completed"));
+
+    // Both lines will change the value inside the id monad.
+    // The observer monads OnNext will be called.
+    
+    id.ActionW((i) => i.Pure("1"));
     id.ActionW(() => id.Pure("2"));
+         
+    public static Func<string, string> setString = (s) => s += "foobar ";
+    
+    // Adding the string foobar to the current string inside the identity two times,
+    // in different ways.
+    id.MethodW(() => { return id.Pure(id.Fmap(setString).Return()); });
+    id.ActionW(() => id.Pure(id.Fmap(setString).Return()));
+            
+    id.EndTransmission();   
             
 :
 
