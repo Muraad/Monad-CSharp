@@ -34,9 +34,9 @@ namespace FunctionalProgramming
             //Playground.MaybePlayaround();
             //Playground.ListMonadPlayground();
             //Playground.ListMonadOperatorPlayground();
-            //Playground.ListMonadBindTest();
+            Playground.ListMonadLinqAndBindPlayground();
             //Playground.ExtensionPlayGround();
-            Playground.ObservableAndThreadSafeMethodsPlayGround();
+            //Playground.ObservableAndThreadSafeMethodsPlayGround();
         }
     }
 }

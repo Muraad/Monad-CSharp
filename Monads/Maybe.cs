@@ -110,11 +110,36 @@ namespace FunctionalProgramming
 
         #region IMonad_Implementation
 
+
+        public override IMonad<A> Fmap(Func<A, A> function)
+        {
+            if (this is Just<A> && function != null)
+                aValue = function(aValue);
+            return this;
+        }
+
+        public override IMonad<A> Fmap(Func<A, int, A> function)
+        {
+            if (this is Just<A> && function != null)
+                aValue = function(aValue, 0);        // implicit operator makes it automatically a Just or a Nothing depending on the function result.
+            return this;
+        }
+
         public override IMonad<B> Fmap<B>(Func<A, B> function)
         {
             Maybe<B> resMaybe = new Nothing<B>();
             if (this is Just<A> && function != null)
                 resMaybe = function(aValue);        // implicit operator makes it automatically a Just or a Nothing depending on the function result.
+            if (resMaybe == null)
+                resMaybe = new Nothing<B>();
+            return resMaybe;
+        }
+
+        public override IMonad<B> Fmap<B>(Func<A, int, B> function)
+        {
+            Maybe<B> resMaybe = new Nothing<B>();
+            if (this is Just<A> && function != null)
+                resMaybe = function(aValue, 0);        // implicit operator makes it automatically a Just or a Nothing depending on the function result.
             if (resMaybe == null)
                 resMaybe = new Nothing<B>();
             return resMaybe;
@@ -181,6 +206,14 @@ namespace FunctionalProgramming
                 return new Nothing<B>();
             else
                 return func(aValue);
+        }
+
+        public override IMonad<B> Bind<B>(Func<A, int, IMonad<B>> func)
+        {
+            if (isNothing)
+                return new Nothing<B>();
+            else
+                return func(aValue, 0);
         }
 
         public override Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
@@ -292,11 +325,6 @@ namespace FunctionalProgramming
 
         public override IMonad<A> Append(A value)
         {
-            /*Maybe<A> resultMonad = new Nothing<A>();
-            if (!isNothing)
-                resultMonad = new Just<A>(value);
-            return resultMonad;*/
-
             if (!isNothing)
                 aValue = value;
             return this;
@@ -309,11 +337,6 @@ namespace FunctionalProgramming
         /// <returns>The new monad.</returns>
         public override IMonad<A> Concatenate(IMonad<A> otherMonad)
         {
-            /*Maybe<A> resultMonad = new Nothing<A>();
-            if (!isNothing)
-                resultMonad = new Just<A>(otherMonad.Return());
-            return resultMonad;*/
-
             if (!isNothing)
                 aValue = otherMonad.Return();
             return this;
@@ -326,65 +349,6 @@ namespace FunctionalProgramming
         public override IEnumerator<A> GetEnumerator()
         {
             return new SingleEnumerator<A>(Return());
-        }
-
-        #endregion
-
-        #region Linq_Enumerable_Implementation
-
-        public override IMonad<A> Where(Func<A, bool> predicate)
-        {
-            Maybe<A> result = new Nothing<A>();
-            if (!this.isNothing && predicate(aValue))
-                return new Just<A>(aValue);
-            return result;
-        }
-
-        public override IMonad<A> Where(Func<A, int, bool> predicate)
-        {
-            Maybe<A> result = new Nothing<A>();
-            if (!this.isNothing && predicate(aValue, 0))
-                result = new Just<A>(aValue);
-            return result;
-        }
-
-        public override IMonad<B> Select<B>(Func<A, B> f)
-        {
-            return Fmap<B>(f);
-        }
-
-        public override IMonad<B> Select<B>(Func<A, int, B> function)
-        {
-            Maybe<B> resMaybe = new Nothing<B>();
-            if (!this.isNothing)
-                resMaybe = function(aValue, 0);
-            return resMaybe;
-        }
-
-        public override IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f)
-        {
-            IMonad<B> result = new Nothing<B>();
-            if (!this.isNothing)
-                result = f(aValue);
-            return result;
-        }
-
-        public override IMonad<B> SelectMany<B>(Func<A, int, IMonad<B>> f)
-        {
-            IMonad<B> result = new Nothing<B>();
-            if (!this.isNothing)
-                result = f(aValue, 0);
-            return result;
-        }
-
-        public override IMonad<B> SelectMany<TMonad, B>(Func<A, IMonad<TMonad>> selector, Func<A, TMonad, B> function)
-        {
-            return Com<TMonad, B>(function, SelectMany(selector));
-        }
-
-        public override IMonad<B> SelectMany<TMonad, B>(Func<A, int, IMonad<TMonad>> selector, Func<A, TMonad, B> function)
-        {
-            return Com<TMonad, B>(function, SelectMany(selector));
         }
 
         #endregion

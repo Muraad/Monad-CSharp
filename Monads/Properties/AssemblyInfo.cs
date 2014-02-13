@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("FunctionalProgramming")]
+[assembly: AssemblyTitle("Monads")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("FunctionalProgramming")]
-[assembly: AssemblyCopyright("Copyright ©  2013")]
+[assembly: AssemblyProduct("Monads")]
+[assembly: AssemblyCopyright("Copyright ©  2014 - Muraad Nofal")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

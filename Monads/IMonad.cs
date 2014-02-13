@@ -376,10 +376,7 @@ namespace FunctionalProgramming
     public abstract class IMonad<A> : IEnumerable<A>, IObservable<A>, IObserver<A>
     {
 
-        public IMonad<A> Set(IMonad<A> other)
-        {
-            return Pure(other.Return());
-        }
+        
 
         #region IMonad_Core_Interface_Function_Definitions
 
@@ -389,16 +386,20 @@ namespace FunctionalProgramming
             get { return rwLock; }
         }
 
+        public IMonad<A> Set(IMonad<A> other)
+        {
+            return Pure(other.Return());
+        }
+
         /// <summary>
         /// Simpler Fmap that takes a function thats return type is the same as the argument type.
         /// Then it uses Concatenate to add the value(s) inside the result monad to this monad.
         /// </summary>
         /// <param name="function">The function to apply.</param>
         /// <returns>The calling monad instance (this).</returns>
-        public virtual IMonad<A> Fmap(Func<A, A> function)
-        {
-            return Concatenate(Fmap<A>(function));
-        }
+        public abstract IMonad<A> Fmap(Func<A, A> function);
+
+        public abstract IMonad<A> Fmap(Func<A, int, A> function);
 
         /// <summary>
         /// Applys a function to the value(s) inside this monad. 
@@ -409,6 +410,17 @@ namespace FunctionalProgramming
         /// <param name="function">The function.</param>
         /// <returns>The new monad.</returns>
         public abstract IMonad<B> Fmap<B>(Func<A, B> function);
+
+        /// <summary>
+        /// Applys a function to the value(s) inside this monad. 
+        /// The results are packed into a new monad of the same type than the calling monad.
+        /// But with a generic type of the function result type.
+        /// </summary>
+        /// <typeparam name="B">The type of the function result.</typeparam>
+        /// <param name="function">The function.</param>
+        /// <returns>The new monad.</returns>
+        public abstract IMonad<B> Fmap<B>(Func<A, int, B> function);
+
 
         /// <summary>
         /// Puts the given value inside of this monad. It does not return a new monad.
@@ -427,6 +439,14 @@ namespace FunctionalProgramming
         /// <param name="func">The function.</param>
         /// <returns>The new monad.</returns>
         public abstract IMonad<B> Bind<B>(Func<A, IMonad<B>> func);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="B"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public abstract IMonad<B> Bind<B>(Func<A, int, IMonad<B>> func);
 
         /// <summary>
         /// The Kleisli-Operator for monads.
@@ -475,21 +495,61 @@ namespace FunctionalProgramming
 
         #endregion
       
+        
         #region Linq_Enumerable_Connection
 
-        public abstract IMonad<A> Where(Func<A, bool> predicate);   // filter.
-        public abstract IMonad<A> Where(Func<A, int, bool> predicate);
+        public virtual IMonad<A> Where(Func<A, bool> predicate)
+        {
+            IMonad<A> result = (IMonad<A>)this.GetType().GetConstructor(new Type[] { }).Invoke(null);
+            foreach(A element in this)
+                if(predicate(element))
+                    result.Append(element);
+            return result;
+        }
 
-        public abstract IMonad<B> Select<B>(Func<A, B> f);       // fmap
-        public abstract IMonad<B> Select<B>(Func<A, Int32, B> f);   // fmap with index.
+        public virtual IMonad<A> Where(Func<A, int, bool> predicate)
+        {
+            IMonad<A> result = (IMonad<A>)this.GetType().GetConstructor(new Type[] { }).Invoke(null);
+            int index = 0;
+            foreach (A element in this)
+            {
+                if (predicate(element, index))
+                    result.Append(element);
+                index++;
+            }
+            return result;
+        }
 
-        public abstract IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f);          // bind
-        public abstract IMonad<B> SelectMany<B>(Func<A, Int32, IMonad<B>> f);
-        public abstract IMonad<B> SelectMany<TMonad, B>(Func<A, IMonad<TMonad>> selector, 
-                                        Func<A, TMonad, B> function);
-        public abstract IMonad<B> SelectMany<TMonad, B>(Func<A, Int32, IMonad<TMonad>> selector, 
-                                        Func<A, TMonad, B> function);
+        public virtual IMonad<B> Select<B>(Func<A, B> f)
+        {
+            return Fmap(f);
+        }
 
+        public virtual IMonad<B> Select<B>(Func<A, Int32, B> f)
+        {
+            return Fmap(f);
+        }
+
+        public virtual IMonad<B> SelectMany<B>(Func<A, IMonad<B>> f)
+        {
+            return Bind(f);
+        }
+
+        public virtual IMonad<B> SelectMany<B>(Func<A, Int32, IMonad<B>> f)
+        {
+            return Bind(f);
+        }
+
+        public virtual IMonad<B> SelectMany<TMonad, B>(Func<A, IMonad<TMonad>> selector, Func<A, TMonad, B> function)
+        {
+            return Com(function, Bind(selector));
+        }
+
+        public virtual IMonad<B> SelectMany<TMonad, B>(Func<A, Int32, IMonad<TMonad>> selector, Func<A, TMonad, B> function)
+        {
+            return Com(function, Bind(selector));
+        }
+        
         #endregion
 
         public abstract IEnumerator<A> GetEnumerator();
@@ -498,7 +558,7 @@ namespace FunctionalProgramming
         {
             return new SingleEnumerator<A>(Return());
         }
-
+        
         #region IObservable implementation
 
         private List<IObserver<A>> observers = new List<IObserver<A>>();
@@ -601,6 +661,11 @@ namespace FunctionalProgramming
 
         private IDisposable unsubscriber = null;
 
+        /// <summary>
+        /// The IObservalbe subscribe will return an IDisposable.
+        /// Set this after subscription.
+        /// Use like: observer.Disposable = observable.Subscribe(observer);
+        /// </summary>
         public IDisposable Disposable 
         {
             get
@@ -612,24 +677,55 @@ namespace FunctionalProgramming
                 unsubscriber = value;
             }
         }
-        public virtual void SubscribeAt(IObservable<A> provider)
+
+        /// <summary>
+        /// Subscribe at a given observable.
+        /// Provider Subscribe() is called. Disposable is set from return value.
+        /// </summary>
+        /// <param name="provider">The IObservable provider we want to subscribe for changes.</param>
+        /// <param name="nextAction">The action that is called when there is a new value from the observable.</param>
+        /// <param name="completeAction">The action called on complete.</param>
+        /// <param name="errorAction">The action that is called if there was an exception at the observer.</param>
+        public virtual void SubscribeAt(IObservable<A> provider, 
+                                        Action<IMonad<A>, A> nextAction = null, 
+                                        Action<IMonad<A>> completeAction = null,
+                                        Action<IMonad<A>, Exception> errorAction = null)
         {
+            if (nextAction != null)
+                NextAction = nextAction;
+
+            if (completeAction != null)
+                CompleteAction = completeAction;
+
+            if (errorAction != null)
+                ErrorAction = errorAction;
+
             if (provider != null)
                 unsubscriber = provider.Subscribe(this);
         }
 
+
+        /// <summary>
+        /// Is called inside OnComplete().
+        /// </summary>
         public Action<IMonad<A>> CompleteAction
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Is called inside OnError().
+        /// </summary>
         public Action<IMonad<A>, Exception> ErrorAction
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Is called inside OnNext().
+        /// </summary>
         public Action<IMonad<A>, A> NextAction
         {
             get;

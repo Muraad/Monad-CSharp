@@ -77,9 +77,26 @@ namespace FunctionalProgramming
 
         #region IMonad_Interface_Implementation
 
+        public override IMonad<A> Fmap(Func<A, A> function)
+        {
+            idValue = function(idValue);
+            return this;
+        }
+
+        public override IMonad<A> Fmap(Func<A, int, A> function)
+        {
+            idValue = function(idValue, 0);
+            return this;
+        }
+
         public override IMonad<B> Fmap<B>(Func<A, B> function)
         {
             return new Identity<B>(function(idValue));
+        }
+
+        public override IMonad<B> Fmap<B>(Func<A, int, B> function)
+        {
+            return new Identity<B>(function(idValue, 0));
         }
 
         public override IMonad<A> Pure(A parameter)
@@ -123,6 +140,11 @@ namespace FunctionalProgramming
         public override IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
         {
             return func(idValue);
+        }
+
+        public override IMonad<B> Bind<B>(Func<A, int, IMonad<B>> func)
+        {
+            return func(idValue, 0);
         }
 
         public override Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
@@ -223,7 +245,7 @@ namespace FunctionalProgramming
         }
 
         #endregion
-
+        /*
         #region Linq_Enumerable_Interface_implemenation
 
         public override IMonad<A> Where(Func<A, bool> predicate)
@@ -277,7 +299,7 @@ namespace FunctionalProgramming
         }
 
         #endregion
-
+        */
         #region IEnumerator_Implementation
 
         public override IEnumerator<A> GetEnumerator()

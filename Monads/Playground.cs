@@ -152,19 +152,19 @@ namespace FunctionalProgramming
             Console.WriteLine("___________________________________________________________");
             Console.ReadLine();
 
-            Console.Write("Combinate Just 5 and the ListMonad<int> with only one function ( f(x,y) = x+y ): ");
+            Console.WriteLine("Combinate Just 5 and the ListMonad<int> with only one function ( f(x,y) = x+y ): ");
             var resultThree = justInt.Com((x, y) => { return x + y; }, intListMonad)
-                                .Visit((x) => { Console.Out.Write(x); });
+                                .Visit((x) => { Console.Out.WriteLine(x); });
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
 
-            Console.Write("Maping a f(x, y) = x*y over the Just 5 and a new Just<int>(10) using LINQ: ");
+            Console.WriteLine("Maping a f(x, y) = x*y over the Just 5 and a new Just<int>(10) using LINQ: ");
             var query = from f in new Just<Func<int, int, int>>((x, y) => { return x * y; })
                         from x in justInt
                         from y in new Just<int>(10)
                         select f(x, y);
 
-            query.Visit((x) => { Console.Out.Write(x + ", "); });
+            query.Visit((x) => { Console.Out.WriteLine(x + ", "); });
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
         }
@@ -606,25 +606,91 @@ namespace FunctionalProgramming
             Console.ReadLine();
         }
 
-        public static void ListMonadBindTest()
+        public static void ListMonadLinqAndBindPlayground()
         {
-            var bindResult = "Hello World!".ToIdentity().Bind(a =>
-                                " This is a bind test".ToIdentity().Bind(b =>
+            var bindResult1 = new ListMonad<string>(){"1. ", "2. "}.Fmap(a =>
+                                "Hello World!".ToIdentity().Fmap(b =>
+                                    (new DateTime(2010, 1, 11)).ToMaybe().Fmap(c =>
+                                        a + ", " + b.ToString() + ", " + c.ToShortDateString()).Return()).Return());
+
+            Console.WriteLine(bindResult1);
+            Console.ReadLine();
+
+            var bindResult2 = from str in new ListMonad<string>(){"1. ", "2. "}
+                              from h in "Hello World!".ToIdentity()
+                              from b in 7.ToIdentity()
+                              from dt in (new DateTime(2010, 1, 11)).ToMaybe()
+                              select str + h + " " + b.ToString() + " " + dt.ToShortDateString();
+
+            Console.WriteLine(bindResult2);
+            Console.ReadLine();
+
+            var bindResult3 = " This is a bind test".ToIdentity().Bind(a =>
+                                "Hello World!".ToIdentity().Bind( b =>
                                     (new DateTime(2010, 1, 11)).ToMaybe().Bind(c =>
                                         (a + ", " + b.ToString() + ", " + c.ToShortDateString()).ToIdentity())));
 
-            Console.WriteLine(bindResult.Return());
+            Console.WriteLine(bindResult3);
 
             Console.ReadLine();
 
-            var result =    from a in "Hello World!".ToIdentity()
-                            from b in 7.ToIdentity()
-                            from c in (new DateTime(2010, 1, 11)).ToIdentity()
-                            select a + ", " + b.ToString() + ", " + c.ToShortDateString();
+            IMonad<string> idString = from a in "Hello World!".ToIdentity()
+                                      from b in 7.ToIdentity()
+                                      from c in (new DateTime(2010, 1, 11)).ToIdentity()
+                                      select a + ", " + b.ToString() + ", " + c.ToShortDateString();
 
-            Console.WriteLine(result.Return());
-
+            Console.WriteLine(idString);
             Console.ReadLine();
+
+            var listMInt = new ListMonad<int>() { 1, 2, 3, 4, 5 };
+            var listMDbl = new ListMonad<double> { 1.5, 2.5, 3.5, 4.5, 5.5 };
+            var listMChar = new ListMonad<Char>() { 'a', 'b', 'c', 'd', 'e' };
+            
+            // The query is a ListMonad<String> because the monad that calles select,
+            // is a ListMonad (listMInt). 
+            var listMString = from i in listMInt
+                                from c in listMChar
+                                select i + ":" + c;
+
+            Console.WriteLine(listMString);
+            Console.ReadLine();
+
+            var result3 = from i in listMInt
+                          from d in listMDbl
+                          from c in listMChar
+                          select c + ") " + Math.Pow(i, d) + ", ";
+
+            Console.WriteLine(result3);
+            Console.ReadLine();
+
+            var result4 = from i in listMInt
+                          from d in listMDbl
+                          from c in listMChar
+                          select (c + ") " + Math.Pow(i, d) + ", ").ToIdentity();
+
+            Console.WriteLine(result4);
+            Console.ReadLine();
+
+            var result5 = from i in listMInt
+                          from d in listMDbl
+                          select i + ") " + Math.Pow(i, d) + ", ";
+
+            Console.WriteLine(result5);
+            Console.ReadLine();
+
+            var result6 = listMInt.Com((i, d) => (i + ") " + Math.Pow(i, d) + ", ").ToIdentity(), listMDbl);
+            Console.WriteLine(result6);
+            Console.ReadLine();
+
+            var result7 = from i in listMInt
+                          where i % 2 == 0
+                          from d in new ListMonad<double>(){1.0, 2.0, 3.0, 4.0, 5.0}
+                          where d % 2 == 0
+                          select i + "^" + d + " = " + Math.Pow(i, d) + ", ";
+
+            Console.WriteLine(result7);
+            Console.ReadLine();
+
         }
 
         public static void ExtensionPlayGround()
