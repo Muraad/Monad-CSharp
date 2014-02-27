@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monads", "Monads.csproj", "{649B66B7-40D5-436B-800F-FDDB712EFC34}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monads", "Monads\Monads.csproj", "{649B66B7-40D5-436B-800F-FDDB712EFC34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonadsTest", "..\MonadsTest\MonadsTest.csproj", "{714F5BF6-DC96-4867-A09C-0457013BA129}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonadsTest", "MonadsTest\MonadsTest.csproj", "{714F5BF6-DC96-4867-A09C-0457013BA129}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
