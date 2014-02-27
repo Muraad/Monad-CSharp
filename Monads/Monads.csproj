@@ -53,12 +53,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseMonadExtensions\MonadComparatorExtensions.cs" />
+    <Compile Include="BaseMonadExtensions\MonadLiftExtensions.cs" />
+    <Compile Include="BaseMonadExtensions\MonadSafeExtensions.cs" />
+    <Compile Include="BaseMonad\Monad.IObservable.cs" />
+    <Compile Include="BaseMonad\Monad.IObserver.cs" />
+    <Compile Include="BaseMonad\Monad.Linq.cs" />
     <Compile Include="Maybe.cs" />
     <Compile Include="Either.cs" />
     <Compile Include="Identity.cs" />
-    <Compile Include="ListFunctions.cs" />
     <Compile Include="ListMonad.cs" />
-    <Compile Include="IMonad.cs" />
+    <Compile Include="BaseMonad\Monad.cs" />
     <Compile Include="Playground.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -68,6 +73,7 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

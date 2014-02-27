@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2013  Muraad Nofal
+ *  Copyright (C) 2014  Muraad Nofal
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FunctionalProgramming
+namespace Monads
 {
     public static partial class Extensions
     {
@@ -31,7 +31,7 @@ namespace FunctionalProgramming
             return new Just<T>(value);
         }
 
-        public static Maybe<T> ToMaybe<T>(this IMonad<T> value)
+        public static Maybe<T> ToMaybe<T>(this Monad<T> value)
         {
             return value.Return();
         }
@@ -54,7 +54,7 @@ namespace FunctionalProgramming
     /// 
     /// </summary>
     /// <typeparam name="A"></typeparam>
-    public abstract class Maybe<A> : IMonad<A>
+    public abstract class Maybe<A> : Monad<A>
     {
         public static implicit operator A(Maybe<A> instance)
         {
@@ -111,21 +111,21 @@ namespace FunctionalProgramming
         #region IMonad_Implementation
 
 
-        public override IMonad<A> Fmap(Func<A, A> function)
+        public override Monad<A> Fmap(Func<A, A> function)
         {
             if (this is Just<A> && function != null)
                 aValue = function(aValue);
             return this;
         }
 
-        public override IMonad<A> Fmap(Func<A, int, A> function)
+        public override Monad<A> Fmap(Func<A, int, A> function)
         {
             if (this is Just<A> && function != null)
                 aValue = function(aValue, 0);        // implicit operator makes it automatically a Just or a Nothing depending on the function result.
             return this;
         }
 
-        public override IMonad<B> Fmap<B>(Func<A, B> function)
+        public override Monad<B> Fmap<B>(Func<A, B> function)
         {
             Maybe<B> resMaybe = new Nothing<B>();
             if (this is Just<A> && function != null)
@@ -135,7 +135,7 @@ namespace FunctionalProgramming
             return resMaybe;
         }
 
-        public override IMonad<B> Fmap<B>(Func<A, int, B> function)
+        public override Monad<B> Fmap<B>(Func<A, int, B> function)
         {
             Maybe<B> resMaybe = new Nothing<B>();
             if (this is Just<A> && function != null)
@@ -145,7 +145,7 @@ namespace FunctionalProgramming
             return resMaybe;
         }
 
-        public override IMonad<A> Pure(A parameter)
+        public override Monad<A> Pure(A parameter)
         {
             aValue = parameter;        // Use implicit operator to make Just or Nothing 
             return this;
@@ -156,7 +156,7 @@ namespace FunctionalProgramming
             return aValue;
         }
 
-        public override IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad)
+        public override Monad<B> App<B>(Monad<Func<A, B>> functionMonad)
         {
             Maybe<B> result = new Nothing<B>();
             if (this is Just<A> && functionMonad != null)
@@ -172,9 +172,9 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad)
+        public override Monad<B> App<B>(Monad<Func<A, Monad<B>>> functionMonad)
         {
-            IMonad<B> result = new Nothing<B>();
+            Monad<B> result = new Nothing<B>();
             if (this is Just<A> && functionMonad != null)
             {
                 result = null;
@@ -200,7 +200,7 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
+        public override Monad<B> Bind<B>(Func<A, Monad<B>> func)
         {
             if (isNothing)
                 return new Nothing<B>();
@@ -208,7 +208,7 @@ namespace FunctionalProgramming
                 return func(aValue);
         }
 
-        public override IMonad<B> Bind<B>(Func<A, int, IMonad<B>> func)
+        public override Monad<B> Bind<B>(Func<A, int, Monad<B>> func)
         {
             if (isNothing)
                 return new Nothing<B>();
@@ -216,7 +216,7 @@ namespace FunctionalProgramming
                 return func(aValue, 0);
         }
 
-        public override Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        public override Func<A, Monad<C>> Kleisli<B, C>(Func<A, Monad<B>> fAtB, Func<B, Monad<C>> fBtC)
         {
             return (a) =>
             {
@@ -227,7 +227,7 @@ namespace FunctionalProgramming
             };
         }
 
-        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Monad<Func<A, B, C>> functionMonad, Monad<B> mOther)
         {
             Maybe<C> result = new Nothing<C>();
 
@@ -246,9 +246,9 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Monad<Func<A, B, Monad<C>>> functionMonad, Monad<B> mOther)
         {
-            IMonad<C> result = new Nothing<C>();
+            Monad<C> result = new Nothing<C>();
 
             if (!isNothing && !(mOther is Nothing<B>))         // other is no maybe and this is not nothing.
             {
@@ -274,9 +274,9 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Func<A, B, C> function, Monad<B> mOther)
         {
-            IMonad<C> resultMonad = new Nothing<C>();  // New Nothing<B> maybe
+            Monad<C> resultMonad = new Nothing<C>();  // New Nothing<B> maybe
             if (!isNothing && !(mOther is Nothing<B>))
             {
                 foreach (var otherValue in mOther)
@@ -285,9 +285,9 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public override IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Func<A, B, Monad<C>> function, Monad<B> mOther)
         {
-            IMonad<C> result = new Nothing<C>();  // New Nothing<B> maybe
+            Monad<C> result = new Nothing<C>();  // New Nothing<B> maybe
             if (!isNothing && !(mOther is Nothing<B>))
             {
                 result = null;
@@ -308,14 +308,14 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override IMonad<A> Visit(Action<A> action)
+        public override Monad<A> Visit(Action<A> action)
         {
             if (this is Just<A> && action != null)
                 action(aValue);
             return this;
         }
 
-        public override IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther)
+        public override Monad<A> Visit<B>(Action<A, B> action, Monad<B> mOther)
         {
             if (this is Just<A> && action != null && mOther != null)
                 foreach (var element in mOther)
@@ -323,7 +323,7 @@ namespace FunctionalProgramming
             return this;
         }
 
-        public override IMonad<A> Append(A value)
+        public override Monad<A> Append(A value)
         {
             if (!isNothing)
                 aValue = value;
@@ -335,7 +335,7 @@ namespace FunctionalProgramming
         /// </summary>
         /// <param name="otherMonad">The other monad.</param>
         /// <returns>The new monad.</returns>
-        public override IMonad<A> Concatenate(IMonad<A> otherMonad)
+        public override Monad<A> Concatenate(Monad<A> otherMonad)
         {
             if (!isNothing)
                 aValue = otherMonad.Return();

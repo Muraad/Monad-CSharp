@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2013  Muraad Nofal
+ *  Copyright (C) 2014  Muraad Nofal
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FunctionalProgramming
+namespace Monads
 {
     /*
     public class Right<T> : EitherValue<T>

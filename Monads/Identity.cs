@@ -25,7 +25,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-namespace FunctionalProgramming
+namespace Monads
 {
     public static partial class Extensions
     {
@@ -34,13 +34,13 @@ namespace FunctionalProgramming
             return new Identity<T>(value);
         }
 
-        public static Identity<T> ToIdentity<T>(this IMonad<T> value)
+        public static Identity<T> ToIdentity<T>(this Monad<T> value)
         {
             return new Identity<T>(value.Return());
         }
     }
 
-    public class Identity<A> : IMonad<A>
+    public class Identity<A> : Monad<A>
     {
         private A idValue;
         
@@ -77,29 +77,29 @@ namespace FunctionalProgramming
 
         #region IMonad_Interface_Implementation
 
-        public override IMonad<A> Fmap(Func<A, A> function)
+        public override Monad<A> Fmap(Func<A, A> function)
         {
             idValue = function(idValue);
             return this;
         }
 
-        public override IMonad<A> Fmap(Func<A, int, A> function)
+        public override Monad<A> Fmap(Func<A, int, A> function)
         {
             idValue = function(idValue, 0);
             return this;
         }
 
-        public override IMonad<B> Fmap<B>(Func<A, B> function)
+        public override Monad<B> Fmap<B>(Func<A, B> function)
         {
             return new Identity<B>(function(idValue));
         }
 
-        public override IMonad<B> Fmap<B>(Func<A, int, B> function)
+        public override Monad<B> Fmap<B>(Func<A, int, B> function)
         {
             return new Identity<B>(function(idValue, 0));
         }
 
-        public override IMonad<A> Pure(A parameter)
+        public override Monad<A> Pure(A parameter)
         {
             idValue = parameter;
             return this;
@@ -110,7 +110,7 @@ namespace FunctionalProgramming
             return idValue;
         }
 
-        public override IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad)
+        public override Monad<B> App<B>(Monad<Func<A, B>> functionMonad)
         {
             Identity<B> resultIdentity = new Identity<B>();
             foreach (var function in functionMonad)
@@ -119,9 +119,9 @@ namespace FunctionalProgramming
             return resultIdentity;
         }
 
-        public override IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad)
+        public override Monad<B> App<B>(Monad<Func<A, Monad<B>>> functionMonad)
         {
-            IMonad<B> resultMonad = null;
+            Monad<B> resultMonad = null;
             foreach (var function in functionMonad)
             {
                 if (function != null)
@@ -137,17 +137,17 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public override IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
+        public override Monad<B> Bind<B>(Func<A, Monad<B>> func)
         {
             return func(idValue);
         }
 
-        public override IMonad<B> Bind<B>(Func<A, int, IMonad<B>> func)
+        public override Monad<B> Bind<B>(Func<A, int, Monad<B>> func)
         {
             return func(idValue, 0);
         }
 
-        public override Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        public override Func<A, Monad<C>> Kleisli<B, C>(Func<A, Monad<B>> fAtB, Func<B, Monad<C>> fBtC)
         {
             return (a) =>
             {
@@ -155,7 +155,7 @@ namespace FunctionalProgramming
             };
         }
 
-        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Monad<Func<A, B, C>> functionMonad, Monad<B> mOther)
         {
             Identity<C> resultMonad = new Identity<C>();
 
@@ -167,9 +167,9 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Monad<Func<A, B, Monad<C>>> functionMonad, Monad<B> mOther)
         {
-            IMonad<C> resultMonad = null;
+            Monad<C> resultMonad = null;
 
             foreach (var function in functionMonad)
             {
@@ -190,20 +190,20 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public override IMonad<A> Visit(Action<A> action)
+        public override Monad<A> Visit(Action<A> action)
         {
             action(idValue);
             return this;
         }
 
-        public override IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther)
+        public override Monad<A> Visit<B>(Action<A, B> action, Monad<B> mOther)
         {
             foreach (var element in mOther)
                 action(idValue, element);
             return this;
         }
 
-        public override IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Func<A, B, C> function, Monad<B> mOther)
         {
             Identity<C> resultMonad = new Identity<C>();
 
@@ -216,9 +216,9 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public override IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Func<A, B, Monad<C>> function, Monad<B> mOther)
         {
-            IMonad<C> resultMonad = null;
+            Monad<C> resultMonad = null;
 
             foreach (var value in mOther)
                 if (resultMonad == null)
@@ -232,13 +232,13 @@ namespace FunctionalProgramming
             return resultMonad;
         }
 
-        public override IMonad<A> Append(A value)
+        public override Monad<A> Append(A value)
         {
             idValue = value;
             return this;
         }
 
-        public override IMonad<A> Concatenate(IMonad<A> otherMonad)
+        public override Monad<A> Concatenate(Monad<A> otherMonad)
         {
             this.idValue = otherMonad.Return();
             return this;

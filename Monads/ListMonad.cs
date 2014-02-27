@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2013  Muraad Nofal
+ *  Copyright (C) 2014  Muraad Nofal
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FunctionalProgramming
+namespace Monads
 {
     public static partial class Extensions
     {
@@ -39,7 +39,7 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public static ListMonad<T> ToListMonad<T>(this IMonad<T> value)
+        public static ListMonad<T> ToListMonad<T>(this Monad<T> value)
         {
             ListMonad<T> result = new ListMonad<T>();
             foreach (T element in value)
@@ -48,7 +48,7 @@ namespace FunctionalProgramming
         }
     }
 
-    public class ListMonad<A> : IMonad<A>, IList<A> 
+    public class ListMonad<A> : Monad<A>, IList<A> 
     {
         private List<A> list = new List<A>();
 
@@ -72,23 +72,23 @@ namespace FunctionalProgramming
         #region Operator_overloading
 
         // applicate with multiplicate operator.
-        public static IMonad<A> operator *(ListMonad<A> firstM, IMonad<Func<A, IMonad<A>>> functionMonad)
+        public static Monad<A> operator *(ListMonad<A> firstM, Monad<Func<A, Monad<A>>> functionMonad)
         {
             return firstM.App(functionMonad);
         }
 
-        public static IMonad<A> operator *(ListMonad<A> firstM, IMonad<Func<A, A>> functionMonad)
+        public static Monad<A> operator *(ListMonad<A> firstM, Monad<Func<A, A>> functionMonad)
         {
             return firstM.App(functionMonad);
         }
 
         // Combinate with multiplicate operator.
-        public static ListMonad<A> operator *(ListMonad<A> firstM, Tuple<IMonad<Func<A, A, A>>, IMonad<A>> tupel)
+        public static ListMonad<A> operator *(ListMonad<A> firstM, Tuple<Monad<Func<A, A, A>>, Monad<A>> tupel)
         {
             return (ListMonad<A>)firstM.Com<A, A>(tupel.Item1, tupel.Item2);
         }
 
-        public static ListMonad<A> operator *(ListMonad<A> firstM, Tuple<IMonad<Func<A, A, IMonad<A>>>, IMonad<A>> tupel)
+        public static ListMonad<A> operator *(ListMonad<A> firstM, Tuple<Monad<Func<A, A, Monad<A>>>, Monad<A>> tupel)
         {
             
             return (ListMonad<A>)firstM.Com<A, A>(tupel.Item1, tupel.Item2);
@@ -99,7 +99,7 @@ namespace FunctionalProgramming
             return (ListMonad < A > )firstM.Fmap<A>(functionMonad);
         }
 
-        public static IMonad<A> operator +(ListMonad<A> firstM, ListMonad<A> otherMonad)
+        public static Monad<A> operator +(ListMonad<A> firstM, ListMonad<A> otherMonad)
         {
             return firstM.Concatenate(otherMonad);
         }
@@ -110,7 +110,7 @@ namespace FunctionalProgramming
         /// <param name="firstM">The monad to zip with.</param>
         /// <param name="tuple">The function used for zipping.</param>
         /// <returns>The result zipped monad.</returns>
-        public static IMonad<A> operator +(ListMonad<A> firstM, Tuple<Func<A, A, A>, IMonad<A>> tuple)
+        public static Monad<A> operator +(ListMonad<A> firstM, Tuple<Func<A, A, A>, Monad<A>> tuple)
         {
             return firstM.Com<A, A>(tuple.Item1, tuple.Item2);
         }
@@ -121,7 +121,7 @@ namespace FunctionalProgramming
         /// <param name="firstM">The other monad to zip with.</param>
         /// <param name="tuple">The tupe with the funtion that is used to zip the two values together</param>
         /// <returns>The ziped result monad.</returns>
-        public static IMonad<A> operator +(ListMonad<A> firstM, Tuple<Func<A, A, IMonad<A>>, IMonad<A>> tuple)
+        public static Monad<A> operator +(ListMonad<A> firstM, Tuple<Func<A, A, Monad<A>>, Monad<A>> tuple)
         {
             return firstM.Com<A, A>(tuple.Item1, tuple.Item2);
         }
@@ -130,14 +130,14 @@ namespace FunctionalProgramming
 
         #region IMonad_Interface_Implementation
 
-        public override IMonad<A> Fmap(Func<A, A> function)
+        public override Monad<A> Fmap(Func<A, A> function)
         {
             for (int i = 0; i < list.Count; i++)
                 list[i] = function(list[i]);
             return this;
         }
 
-        public override IMonad<A> Fmap(Func<A, int, A> function)
+        public override Monad<A> Fmap(Func<A, int, A> function)
         {
             for (int i = 0; i < list.Count; i++)
                 list[i] = function(list[i], i);
@@ -151,7 +151,7 @@ namespace FunctionalProgramming
         /// <typeparam name="B">Type of the value inside the result ListMonad.</typeparam>
         /// <param name="function">The function to map over the values.</param>
         /// <returns>The result ListMonad<B></returns>
-        public override IMonad<B> Fmap<B>(Func<A, B> function)
+        public override Monad<B> Fmap<B>(Func<A, B> function)
         {
             ListMonad<B> resultEnumerable = new ListMonad<B>();
             foreach (A element in list)
@@ -159,7 +159,7 @@ namespace FunctionalProgramming
             return resultEnumerable;
         }
 
-        public override IMonad<B> Fmap<B>(Func<A, int, B> function)
+        public override Monad<B> Fmap<B>(Func<A, int, B> function)
         {
             ListMonad<B> resultListMonad = new ListMonad<B>();
             int index = 0;
@@ -176,14 +176,14 @@ namespace FunctionalProgramming
         /// </summary>
         /// <param name="parameter">The value to put inside the new ListMonad.</param>
         /// <returns>A new ListMonad.</returns>
-        public override IMonad<A> Pure(A parameter)
+        public override Monad<A> Pure(A parameter)
         {
             list.Clear();
             list.Add(parameter);
             return this;
         }
 
-        public override IMonad<B> App<B>(IMonad<Func<A, B>> functionMonad)
+        public override Monad<B> App<B>(Monad<Func<A, B>> functionMonad)
         {
             ListMonad<B> resultListMonad = new ListMonad<B>();
             foreach (Func<A, B> function in functionMonad)
@@ -206,11 +206,11 @@ namespace FunctionalProgramming
         /// <typeparam name="B">The type inside the result ListMonad.</typeparam>
         /// <param name="functionMonad">The monad that has functions inside.</param>
         /// <returns>The new ListMonad of type B.</returns>
-        public override IMonad<B> App<B>(IMonad<Func<A, IMonad<B>>> functionMonad)
+        public override Monad<B> App<B>(Monad<Func<A, Monad<B>>> functionMonad)
         {
             ListMonad<B> result = new ListMonad<B>();
 
-            foreach (Func<A, IMonad<B>> function in functionMonad)
+            foreach (Func<A, Monad<B>> function in functionMonad)
             {
                 // function can be null, for example when the functionMonad is a Maybe with Nothing<Func<A, IMonad<B>> then default(Func<A, IMonad<B>>) returns null
                 // we could check for IMonad as Maybe and then check for isNothing, but then ListMonad have to "know" Maybe, i dont like that.
@@ -225,9 +225,9 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override IMonad<B> Bind<B>(Func<A, IMonad<B>> func)
+        public override Monad<B> Bind<B>(Func<A, Monad<B>> func)
         {
-            IMonad<B> result = null;
+            Monad<B> result = null;
 
             foreach (A element in list)
                 if (result == null)
@@ -238,9 +238,9 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override IMonad<B> Bind<B>(Func<A, int, IMonad<B>> func)
+        public override Monad<B> Bind<B>(Func<A, int, Monad<B>> func)
         {
-            IMonad<B> result = null;
+            Monad<B> result = null;
             for (int i = 0; i < list.Count; i++)
                 if (result == null)
                     result = func(list[i], i);
@@ -250,11 +250,11 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override Func<A, IMonad<C>> Kleisli<B, C>(Func<A, IMonad<B>> fAtB, Func<B, IMonad<C>> fBtC)
+        public override Func<A, Monad<C>> Kleisli<B, C>(Func<A, Monad<B>> fAtB, Func<B, Monad<C>> fBtC)
         {
             return (a) =>
             {
-                IMonad<B> result = null;
+                Monad<B> result = null;
                 foreach (A element in list)
                     if (result == null)
                         result = fAtB(element);
@@ -265,7 +265,7 @@ namespace FunctionalProgramming
             };
         }
 
-        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, C>> functionMonad, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Monad<Func<A, B, C>> functionMonad, Monad<B> mOther)
         {
             ListMonad<C> resultListMonad = new ListMonad<C>();
             foreach (Func<A, B, C> f in functionMonad)
@@ -276,11 +276,11 @@ namespace FunctionalProgramming
             return resultListMonad;
         }
 
-        public override IMonad<C> Com<B, C>(IMonad<Func<A, B, IMonad<C>>> functionMonad, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Monad<Func<A, B, Monad<C>>> functionMonad, Monad<B> mOther)
         {
             ListMonad<C> result = new ListMonad<C>();
 
-            foreach (Func<A, B, IMonad<C>> f in functionMonad)
+            foreach (Func<A, B, Monad<C>> f in functionMonad)
                 foreach (A a in list)
                     foreach (B b in mOther)
                         result.Concatenate(f(a, b));
@@ -288,7 +288,7 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override IMonad<C> Com<B, C>(Func<A, B, C> function, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Func<A, B, C> function, Monad<B> mOther)
         {
             ListMonad<C> resultListMonad = new ListMonad<C>();
 
@@ -299,7 +299,7 @@ namespace FunctionalProgramming
             return resultListMonad;
         }
         
-        public override IMonad<C> Com<B, C>(Func<A, B, IMonad<C>> function, IMonad<B> mOther)
+        public override Monad<C> Com<B, C>(Func<A, B, Monad<C>> function, Monad<B> mOther)
         {
             ListMonad<C> result = new ListMonad<C>();
 
@@ -310,14 +310,14 @@ namespace FunctionalProgramming
             return result;
         }
 
-        public override IMonad<A> Visit(Action<A> function)
+        public override Monad<A> Visit(Action<A> function)
         {
             foreach (A element in list)
                 function(element);
             return this;
         }
 
-        public override IMonad<A> Visit<B>(Action<A, B> action, IMonad<B> mOther)
+        public override Monad<A> Visit<B>(Action<A, B> action, Monad<B> mOther)
         {
             foreach (var aElement in list)
                 foreach (var otherElement in mOther)
@@ -330,7 +330,7 @@ namespace FunctionalProgramming
             return list[list.Count-1];
         }
 
-        public override IMonad<A> Concatenate(IMonad<A> otherMonad)
+        public override Monad<A> Concatenate(Monad<A> otherMonad)
         {
             if (this.Equals(otherMonad))
                 return this;
@@ -341,7 +341,7 @@ namespace FunctionalProgramming
             return this;
         }
 
-        public override IMonad<A> Append(A value)
+        public override Monad<A> Append(A value)
         {
             list.Add(value);
             return this;

@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2013  Muraad Nofal
+ *  Copyright (C) 2014  Muraad Nofal
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FunctionalProgramming
+namespace Monads
 {
     public static class Playground
     {
@@ -98,7 +98,7 @@ namespace FunctionalProgramming
 
             Console.Write("App Just<Func> over the Just<int>(5), \n where the functions returns a new " + 
                             "ListMonad<int>() \n with two times the value inside the Just 5. Output: ");
-            var function = new Just<Func<int, IMonad<int>>>((x) => { return new ListMonad<int>(){x, x};});
+            var function = new Just<Func<int, Monad<int>>>((x) => { return new ListMonad<int>(){x, x};});
             var intListMonad = justInt.App(function).Visit( (x) => { Console.Out.Write(x + ", "); } );
             Console.WriteLine("\n___________________________________________________________");
             Console.ReadLine();
@@ -126,7 +126,7 @@ namespace FunctionalProgramming
                                 "The result ListMonad´s are flattned out, and only one result ListMonad<double> \n"+
                                 " with all result values is returned: ");
             Console.WriteLine();
-            var functionListMonadTwo = new ListMonad<Func<int, double, IMonad<double>>>();
+            var functionListMonadTwo = new ListMonad<Func<int, double, Monad<double>>>();
             functionListMonadTwo.Append((x, y) => { return new ListMonad<double>() { x + y }; });
             functionListMonadTwo.Append((x, y) => { return new ListMonad<double>() { x - y }; });
             functionListMonadTwo.Append((x, y) => { return new ListMonad<double>(){x * y}; });
@@ -218,18 +218,18 @@ namespace FunctionalProgramming
             Console.ReadLine();
 
             // Functions for second App function.
-            Func<int, IMonad<double>> intIMonadIntDoubleFunc1 = 
+            Func<int, Monad<double>> intIMonadIntDoubleFunc1 = 
                                         (x) => { return new Just<double>(x * x); };
-            Func<int, IMonad<double>> intIMonadIntDoubleFunc2 = 
+            Func<int, Monad<double>> intIMonadIntDoubleFunc2 = 
                                         (x) => { return new Just<double>(x * x *x); };
-            Func<int, IMonad<double>> intIMonadIntDoubleFunc3 = 
+            Func<int, Monad<double>> intIMonadIntDoubleFunc3 = 
                                         (x) => { return new Just<double>(x * x * x * x); };
-            Func<int, IMonad<double>> intIMonadIntDoubleFunc4 = 
+            Func<int, Monad<double>> intIMonadIntDoubleFunc4 = 
                                         (x) => { return new Just<double>(x * x * x * x * x); };
-            Func<int, IMonad<double>> intIMonadIntDoubleFunc5 = 
+            Func<int, Monad<double>> intIMonadIntDoubleFunc5 = 
                                         (x) => { return new ListMonad<double>(){x+1, x-1}; };
 
-            var listMonadIMonadIntDoubleFunc = new ListMonad<Func<int, IMonad<double>>>();
+            var listMonadIMonadIntDoubleFunc = new ListMonad<Func<int, Monad<double>>>();
             listMonadIMonadIntDoubleFunc.Append(intIMonadIntDoubleFunc1);
             listMonadIMonadIntDoubleFunc.Append(intIMonadIntDoubleFunc2);
             listMonadIMonadIntDoubleFunc.Append(intIMonadIntDoubleFunc3);
@@ -295,28 +295,28 @@ namespace FunctionalProgramming
             Console.ReadLine();
 
             // Functions for combination with IMonad as result.
-            Func<int, double, IMonad<double>> intDoubleIMonadDoubleFunc1 = 
+            Func<int, double, Monad<double>> intDoubleIMonadDoubleFunc1 = 
                 (x, y) => { return new Just<double>((double)x + y); };
 
-            Func<int, double, IMonad<double>> intDoubleIMonadDoubleFunc2 = 
+            Func<int, double, Monad<double>> intDoubleIMonadDoubleFunc2 = 
                 (x, y) => { return new Just<double>((double)x - y); };
 
-            Func<int, double, IMonad<double>> intDoubleIMonadDoubleFunc3 = 
+            Func<int, double, Monad<double>> intDoubleIMonadDoubleFunc3 = 
                 (x, y) => { return new Just<double>((double)x * y); };
 
-            Func<int, double, IMonad<double>> intDoubleIMonadDoubleFunc4 = 
+            Func<int, double, Monad<double>> intDoubleIMonadDoubleFunc4 = 
                 (x, y) => { return new Just<double>((double)x / y); };
 
-            Func<int, double, IMonad<double>> intDoubleIMonadDoubleFunc5 = 
+            Func<int, double, Monad<double>> intDoubleIMonadDoubleFunc5 = 
                 (x, y) => { return new ListMonad<double>(){(double)x % y}; };
 
-            Func<int, double, IMonad<double>> intDoubleIMonadDoubleFunc6 = 
+            Func<int, double, Monad<double>> intDoubleIMonadDoubleFunc6 = 
                 (x, y) => { return new ListMonad<double>() { (double)x * y * y, (double) x * y * y * y }; };
             
-            Func<int, double, IMonad<double>> intDoubleIMonadDoubleFunc7 = 
+            Func<int, double, Monad<double>> intDoubleIMonadDoubleFunc7 = 
                 (x, y) => { return new Nothing<double>(); };
 
-            var listMonadIntDoubleIMonadDoubleFunc = new ListMonad<Func<int, double, IMonad<double>>>()
+            var listMonadIntDoubleIMonadDoubleFunc = new ListMonad<Func<int, double, Monad<double>>>()
                                                     {intDoubleIMonadDoubleFunc1,
                                                     intDoubleIMonadDoubleFunc2,
                                                     intDoubleIMonadDoubleFunc3,
@@ -429,18 +429,18 @@ namespace FunctionalProgramming
                                                     { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 };
 
             // Functions for second App function.
-            Func<double, IMonad<double>> doubleIMonadDoubleFun1 =
+            Func<double, Monad<double>> doubleIMonadDoubleFun1 =
                                         (x) => { return new Just<double>(x * x); };
-            Func<double, IMonad<double>> doubleIMonadDoubleFun2 =
+            Func<double, Monad<double>> doubleIMonadDoubleFun2 =
                                         (x) => { return new Just<double>(x * x * x); };
-            Func<double, IMonad<double>> doubleIMonadDoubleFun3 =
+            Func<double, Monad<double>> doubleIMonadDoubleFun3 =
                                         (x) => { return new Just<double>(x * x * x * x); };
-            Func<double, IMonad<double>> doubleIMonadDoubleFun4 =
+            Func<double, Monad<double>> doubleIMonadDoubleFun4 =
                                         (x) => { return new Just<double>(x * x * x * x * x); };
-            Func<double, IMonad<double>> doubleIMonadDoubleFun5 =
+            Func<double, Monad<double>> doubleIMonadDoubleFun5 =
                                         (x) => { return new ListMonad<double>() { x + 1, x - 1 }; };
 
-            var listMonadFunc1 = new ListMonad<Func<double, IMonad<double>>>();
+            var listMonadFunc1 = new ListMonad<Func<double, Monad<double>>>();
             listMonadFunc1.Append(doubleIMonadDoubleFun1);
             listMonadFunc1.Append(doubleIMonadDoubleFun2);
             listMonadFunc1.Append(doubleIMonadDoubleFun3);
@@ -468,28 +468,28 @@ namespace FunctionalProgramming
 
 
             // Functions for combination with IMonad as result.
-            Func<double, double, IMonad<double>> intDoubleIMonadDoubleFunc1 =
+            Func<double, double, Monad<double>> intDoubleIMonadDoubleFunc1 =
                 (x, y) => { return new Just<double>(x + y); };
 
-            Func<double, double, IMonad<double>> intDoubleIMonadDoubleFunc2 =
+            Func<double, double, Monad<double>> intDoubleIMonadDoubleFunc2 =
                 (x, y) => { return new Just<double>(x - y); };
 
-            Func<double, double, IMonad<double>> intDoubleIMonadDoubleFunc3 =
+            Func<double, double, Monad<double>> intDoubleIMonadDoubleFunc3 =
                 (x, y) => { return new Just<double>(x * y); };
 
-            Func<double, double, IMonad<double>> intDoubleIMonadDoubleFunc4 =
+            Func<double, double, Monad<double>> intDoubleIMonadDoubleFunc4 =
                 (x, y) => { return new Just<double>(x / y); };
 
-            Func<double, double, IMonad<double>> intDoubleIMonadDoubleFunc5 =
+            Func<double, double, Monad<double>> intDoubleIMonadDoubleFunc5 =
                 (x, y) => { return new ListMonad<double>() { x % y }; };
 
-            Func<double, double, IMonad<double>> intDoubleIMonadDoubleFunc6 =
+            Func<double, double, Monad<double>> intDoubleIMonadDoubleFunc6 =
                 (x, y) => { return new ListMonad<double>() { x * y * y, x * y * y * y }; };
 
-            Func<double, double, IMonad<double>> intDoubleIMonadDoubleFunc7 =
+            Func<double, double, Monad<double>> intDoubleIMonadDoubleFunc7 =
                 (x, y) => { return new Nothing<double>(); };
 
-            var listMonadFunc3 = new ListMonad<Func<double, double, IMonad<double>>>()
+            var listMonadFunc3 = new ListMonad<Func<double, double, Monad<double>>>()
                                                     {intDoubleIMonadDoubleFunc1,
                                                     intDoubleIMonadDoubleFunc2,
                                                     intDoubleIMonadDoubleFunc3,
@@ -528,8 +528,8 @@ namespace FunctionalProgramming
             // because the \"*\" operator can have only one other argument.
             // it sad there are no way for custom operators in C#
             // and there are no operator that take tree arguments and can be overloaded.
-            var funcMonadTupel = new Tuple<IMonad<Func<double, double, double>>,
-                                            IMonad<double>
+            var funcMonadTupel = new Tuple<Monad<Func<double, double, double>>,
+                                            Monad<double>
                                             >(listMonadFunc2, 
                                             listMonadDoubleTwo);
 
@@ -551,8 +551,8 @@ namespace FunctionalProgramming
             Console.ReadLine();
 
 
-            var funcMonadTupelTwo = new Tuple<IMonad<Func<double, double, IMonad<double>>>,
-                                            IMonad<double>>
+            var funcMonadTupelTwo = new Tuple<Monad<Func<double, double, Monad<double>>>,
+                                            Monad<double>>
                                             (listMonadFunc3,
                                             listMonadDoubleTwo);
 
@@ -634,7 +634,7 @@ namespace FunctionalProgramming
 
             Console.ReadLine();
 
-            IMonad<string> idString = from a in "Hello World!".ToIdentity()
+            Monad<string> idString = from a in "Hello World!".ToIdentity()
                                       from b in 7.ToIdentity()
                                       from c in (new DateTime(2010, 1, 11)).ToIdentity()
                                       select a + ", " + b.ToString() + ", " + c.ToShortDateString();
@@ -723,8 +723,8 @@ namespace FunctionalProgramming
 
 
         public static Func<string, int> func = (s) => { return s.Length; };
-        public static Func<IMonad<string>, IMonad<int>> monadFunc = (m) => { return m.Fmap(func); };
-        public static Func<IMonad<string>, Identity<string>> copyFunc = (id) => { return new Identity<string>(id.Return()); };
+        public static Func<Monad<string>, Monad<int>> monadFunc = (m) => { return m.Fmap(func); };
+        public static Func<Monad<string>, Identity<string>> copyFunc = (id) => { return new Identity<string>(id.Return()); };
         public static Func<string, string> setString = (s) => s += "foobar ";
 
         public static void ObservableAndThreadSafeMethodsPlayGround()
