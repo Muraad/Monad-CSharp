@@ -23,14 +23,13 @@ using System.Threading.Tasks;
 namespace Monads
 {
 
-
     public class NexValueUnknownException : Exception
     {
         internal NexValueUnknownException()
         { }
     }
 
-    public abstract partial class Monad<A>
+    public abstract partial class Monad<A> : IObservable<A>
     {
         #region IObservable implementation
 

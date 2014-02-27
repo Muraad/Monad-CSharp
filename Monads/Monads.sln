@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monads", "Monads.csproj", "{649B66B7-40D5-436B-800F-FDDB712EFC34}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonadsTest", "..\MonadsTest\MonadsTest.csproj", "{714F5BF6-DC96-4867-A09C-0457013BA129}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{649B66B7-40D5-436B-800F-FDDB712EFC34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{649B66B7-40D5-436B-800F-FDDB712EFC34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{649B66B7-40D5-436B-800F-FDDB712EFC34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{714F5BF6-DC96-4867-A09C-0457013BA129}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{714F5BF6-DC96-4867-A09C-0457013BA129}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{714F5BF6-DC96-4867-A09C-0457013BA129}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{714F5BF6-DC96-4867-A09C-0457013BA129}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -27,7 +27,7 @@ using System.Linq.Expressions;
 
 namespace Monads
 {
-    public abstract partial class Monad<A> : IEnumerable<A>, IObservable<A>, IObserver<A>
+    public abstract partial class Monad<A> : IEnumerable<A>
     {
         #region IMonad_Core_Interface_Function_Definitions
 
@@ -145,6 +145,7 @@ namespace Monads
         public abstract Monad<A> Concatenate(Monad<A> otherMonad);
 
         #endregion 
+
     }
 
 }

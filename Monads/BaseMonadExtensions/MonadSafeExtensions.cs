@@ -18,7 +18,7 @@
 
 using System;
 
-namespace Monads
+namespace Monads.Extension.SafeActions
 {
     public static class MonadSafeExtensions
     {

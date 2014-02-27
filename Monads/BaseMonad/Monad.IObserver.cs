@@ -20,7 +20,7 @@ using System;
 
 namespace Monads
 {
-    public abstract partial class Monad<A>
+    public abstract partial class Monad<A> : IObserver<A>
     {
         #region IObserver implementation
 

@@ -22,6 +22,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Monads.Extension.Comparator;
+using Monads.Extension.Lift;
+using Monads.Extension.SafeActions;
+
 namespace Monads
 {
     public static class Playground

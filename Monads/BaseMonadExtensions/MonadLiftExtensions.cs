@@ -19,7 +19,7 @@
 using System;
 using System.Reflection;
 
-namespace Monads
+namespace Monads.Extension.Lift
 {
     public static class MonadLiftExtensions
     {

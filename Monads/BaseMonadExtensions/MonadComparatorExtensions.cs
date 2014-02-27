@@ -18,7 +18,7 @@
 
 using System;
 
-namespace Monads
+namespace Monads.Extension.Comparator
 {
     public static class MonadComparatorExtensions
     {
