@@ -3,7 +3,7 @@ Monad-CSharp
 
 Monad like programming with C#.
 
-An abstract base class IMonad that extends IEnumerable, IObservable and IObserver
+An abstract base class Monad that extends IEnumerable, IObservable and IObserver
 Some implementations of the IMonad:
 - Maybe
 - Identity
@@ -18,16 +18,30 @@ Have a look at the Playground.cs for more examples.
 
 A little intro how to use it:
 
-
+```c#
+    
+    // Creating new maybes using implicit operator overloadings
     Maybe<int> justInt = 5;
+    
+    // Implicit operator checks value for default(T). 
+    // So this becomes a Nothing<int>
     Maybe<int> nothingInt = 0;
     
     var intToDoubleFunction = new Func<int, double>(x => { return x * 0.5; });
     Just<double> justDouble = justInt.Fmap(intToDoubleFunction);
-  
-  
-:
+    
+    
+    // Identity atomic extensions
+    Identity<int> intId = 5;
+    if(intId.CompareExchange(42, (i) => i % 2 == 1))
+    {
+        // ....
+    }
 
+```  
+  
+
+```c#
     ListMonad<int> listMonadInt = new ListMonad<int>() { 1, 2, 3, 4, 5 };
     ListMonad<double> listMonadDouble = new ListMonad<double>() {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
     listMonadInt.Fmap((x) => { return 0.5 * x;});
@@ -38,8 +52,13 @@ A little intro how to use it:
     var lmIntDblFunc = new ListMonad<Func<int, double>>() { intDoubleFunc1, intDoubleFunc2 };
     ListMonad<Double> result = listMonadInt.App(lmIntDblFunc);
 
-  
-:
+```
+
+
+Using IObserver/IObservable extensions,
+and ActionW/MethodW thread safe function application.
+
+```c#
     
     Identity<string> id = "string";
     Identity<string> observer = "";
@@ -70,7 +89,10 @@ A little intro how to use it:
             
     id.EndTransmission();   
             
-:
+
+```
+
+```c#
 
     // Functions for combination with IMonad as result.
     Func<int, double, IMonad<double>> intDblIMonadDblF1 = 
@@ -128,3 +150,5 @@ A little intro how to use it:
                     if (counter % (5 * 9) == 0)
                         Console.WriteLine("------------------------------------------------");
                           });
+
+```
