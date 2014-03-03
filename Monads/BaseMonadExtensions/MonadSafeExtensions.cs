@@ -22,6 +22,22 @@ namespace Monads.Extension.SafeActions
 {
     public static class MonadSafeExtensions
     {
+        public static bool CompareSet<T>(this Monad<T> monad, Func<T, bool> predicate, T value)
+        {
+            bool result = false;
+            monad.Lock.EnterWriteLock();
+            try
+            {
+                if ((result = predicate(monad.Return())))
+                    monad.Pure(value);
+            }
+            finally
+            {
+                monad.Lock.ExitWriteLock();
+            }
+            return result;
+        }
+
         #region Do_Write_Or_Read_Action_On_Model_Safe
 
         public static Monad<A> ActionW<A>(this Monad<A> monad, Action expr, bool updateNext = true)

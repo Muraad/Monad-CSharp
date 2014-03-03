@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2013  Muraad Nofal
+ *  Copyright (C) 2014  Muraad Nofal
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,27 +17,43 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Monads
 {
-
-    class Program
+    public class CacheEntry<K, V> : Tuple<K, DateTime, V>
     {
-        
-
-        static void Main(string[] args)
+        public CacheEntry(K key, V value)
+            : base(key, DateTime.Now, value)
         {
-            //Playground.MaybePlayaround();
-            //Playground.ListMonadPlayground();
-            //Playground.ListMonadOperatorPlayground();
-            //Playground.ListMonadLinqAndBindPlayground();
-            //Playground.ExtensionPlayGround();
-            //Playground.ObservableAndThreadSafeMethodsPlayGround();
-            CacheMonadTest.Test();
+        }
+
+        public K Key
+        {
+            get
+            {
+                return Item1;
+            }
+        }
+
+        public DateTime DateTime
+        {
+            get
+            {
+                return Item2;
+            }
+        }
+
+        public V Value
+        {
+            get
+            {
+                return Item3;
+            }
+        }
+
+        public override string ToString()
+        {
+            return Key.ToString() + " : " + Value.ToString() + " (" + DateTime.Diff(DateTime.Now) + ") ";
         }
     }
 }

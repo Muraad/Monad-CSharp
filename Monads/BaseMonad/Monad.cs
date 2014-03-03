@@ -31,7 +31,7 @@ namespace Monads
     {
         #region IMonad_Core_Interface_Function_Definitions
 
-        private System.Threading.ReaderWriterLockSlim rwLock = new System.Threading.ReaderWriterLockSlim();
+        private System.Threading.ReaderWriterLockSlim rwLock = new System.Threading.ReaderWriterLockSlim(System.Threading.LockRecursionPolicy.SupportsRecursion);
         public System.Threading.ReaderWriterLockSlim Lock
         {
             get { return rwLock; }
