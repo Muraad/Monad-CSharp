@@ -3,14 +3,16 @@ Monad-CSharp
 
 Monad like programming with C#.
 
-An abstract base class Monad that extends IEnumerable, IObservable and IObserver
-Some implementations of the IMonad:
+An abstract base class Monad that extends IEnumerable, IObservable and IObserver.
+
+Some implementations of the Monad:
 - Maybe
 - Identity
 - List monad
-- (Either is mostly untested, some kind of decorator) (Update: currently not working!)
+- CacheMonad
+- (Either is mostly untested, it is some kind of decorator) (Update: currently not working!)
 
-Lots of extension methods (LiftMonad, Comparator functions, easy thread safe actions).
+Lots of extension methods (LiftMonad, Comparator functions, easy thread safe function application).
 
 See Doc folder for detailed description an introduction.
 
