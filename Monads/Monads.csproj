@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseMonadExtensions\MonadAtomicExtensions.cs" />
     <Compile Include="BaseMonadExtensions\MonadComparatorExtensions.cs" />
     <Compile Include="BaseMonadExtensions\MonadLiftExtensions.cs" />
     <Compile Include="BaseMonadExtensions\MonadSafeExtensions.cs" />
@@ -63,7 +64,6 @@
     <Compile Include="Implementations\CacheMonad\CacheEntry.cs" />
     <Compile Include="Implementations\CacheMonad\CacheMonad.cs" />
     <Compile Include="Implementations\CacheMonad\DateTimeExtension.cs" />
-    <Compile Include="Implementations\IdentityAtomicExtensions.cs" />
     <Compile Include="Implementations\Maybe.cs" />
     <Compile Include="Implementations\Either.cs" />
     <Compile Include="Implementations\Identity.cs" />

@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace Monads
 {
-    public static partial class Extensions
+    public static partial class ToMonadExtensions
     {
         public static Identity<T> ToIdentity<T>(this T value)
         {

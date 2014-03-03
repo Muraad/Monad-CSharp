@@ -23,8 +23,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
-using Monads.Extension.SafeActions;
-using Monads.Extension.IdentityAtomicExtensions;
+using Monads.Extension.AtomicExtensions;
 
 namespace Monads
 {
@@ -41,7 +40,16 @@ namespace Monads
         // used as atomic boolean.
         Identity<bool> isCleaningUp = false;
 
+        /// <summary>
+        /// A function that is used to calculate a key from the given value.
+        /// Used for function Add(V value).
+        /// </summary>
         public Func<V, K> KeyCalculator = null;
+
+        /// <summary>
+        /// Action that is called for every CacheEntry that is removed from the cache monad on TryCleanUp().
+        /// </summary>
+        public Action<CacheEntry<K, V>> CleanUpAction = null;
 
         public CacheMonad()
         {
@@ -75,6 +83,15 @@ namespace Monads
             }
         }*/
 
+        /// <summary>
+        /// Operator overloading.
+        /// </summary>
+        /// <param name="key">The key.
+        /// Usage:
+        /// var cacheEntry = cacheMonad[key];
+        /// or 
+        /// cacheMonad[key] = cacheEntry;</param>
+        /// <returns> </returns>
         public CacheEntry<K, V> this[K key]
         {
             get
@@ -89,6 +106,12 @@ namespace Monads
             }
         }
 
+        /// <summary>
+        /// Trys to write a cache entry for a given key to the entry parameter.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="entry">The entry.</param>
+        /// <returns>True if CacheEntry for given key was found. False otherwise.</returns>
         public bool TryGet(K key, out CacheEntry<K, V> entry)
         {
             bool result = false;
@@ -107,6 +130,11 @@ namespace Monads
             return result;
         }
 
+        /// <summary>
+        /// Returns a cache entry for a given key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The cache entry.</returns>
         public CacheEntry<K, V> Get(K key)
         {
             CacheEntry<K, V> result = null;
@@ -126,6 +154,13 @@ namespace Monads
             return result;
         }
 
+        /// <summary>
+        /// Adds a new value to the cache monad.
+        /// KeyCalculator function is used to create a key from the given value.
+        /// If KeyCalculator is null a NullReferenceException is thrown.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>this.</returns>
         public CacheMonad<K, V> Add(V value)
         {
             if (KeyCalculator == null)
@@ -135,12 +170,24 @@ namespace Monads
             return this;
         }
 
+        /// <summary>
+        /// Adds a new value with given key to the cache monad.
+        /// </summary>
+        /// <param name="key">The value key.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>this.</returns>
         public CacheMonad<K, V> Add(K key, V value)
         {
             Append(new CacheEntry<K, V>(key, value));
             return this;
         }
 
+        /// <summary>
+        /// Adds a new CacheEntry to the cache monad. 
+        /// If the cache already contains a value for the given key the original value is overwritten. 
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>this.</returns>
         public override Monad<CacheEntry<K, V>> Append(CacheEntry<K, V> value)
         {
             Lock.EnterWriteLock();
@@ -155,14 +202,21 @@ namespace Monads
             return this;
         }
 
+        /// <summary>
+        /// Tries to remove old cache entrys.
+        /// First checks if ticks since last clean up are greater than ticksToCleanUp.
+        /// Then if needed removes all CacheEntry´s that have reached the maxPufferTimeMs.
+        /// </summary>
+        /// <returns></returns>
         public int TryCleanUp()
         {
             int result = 0;
+
+            // check if some other thread is already trying to clean up the cache dictionary.
             if(isCleaningUp.CompareExchange(true, (b) => b == false))
             {
                 // Trigger cleanup if needed.
-                long tickDiff = DateTime.Now.Ticks - lastCleanupTicks;
-                if (tickDiff >  ticksToCleanup)
+                if (DateTime.Now.Ticks - lastCleanupTicks >  ticksToCleanup)
                 {
                     lastCleanupTicks = DateTime.Now.Ticks;
                     if (cacheDict.Count >= cacheCountForAsyncCleanUp)
@@ -188,6 +242,9 @@ namespace Monads
                 var toBeRemoved = cacheDict.Where((entry) => Math.Abs(entry.Value.DateTime.Diff(DateTime.Now)) > pufferTimeMs).ToList();
                 foreach (var value in toBeRemoved)
                 {
+                    if (CleanUpAction != null)
+                        CleanUpAction(value.Value);
+
                     cacheDict.Remove(value.Key);
                     removed++;
                 }

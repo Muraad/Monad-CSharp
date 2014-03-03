@@ -23,6 +23,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Monads;
+using Monads.Extension.AtomicExtensions;
 
 namespace Monads
 {
@@ -46,6 +47,8 @@ namespace Monads
             //Atomic<int> atomic = 5;
             Identity<int> atomic = 5;
             var value = atomic;
+
+            atomic.CompareExchange(42, () => atomic == 5);
 
             Console.WriteLine(value);
             Console.ReadLine();

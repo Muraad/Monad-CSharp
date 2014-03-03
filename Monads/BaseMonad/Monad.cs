@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Linq.Expressions;
+using System.Threading;
 
 namespace Monads
 {
@@ -31,8 +32,9 @@ namespace Monads
     {
         #region IMonad_Core_Interface_Function_Definitions
 
-        private System.Threading.ReaderWriterLockSlim rwLock = new System.Threading.ReaderWriterLockSlim(System.Threading.LockRecursionPolicy.SupportsRecursion);
-        public System.Threading.ReaderWriterLockSlim Lock
+        ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        
+        public ReaderWriterLockSlim Lock
         {
             get { return rwLock; }
         }

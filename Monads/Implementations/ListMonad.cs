@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace Monads
 {
-    public static partial class Extensions
+    public static partial class ToMonadExtensions
     {
         public static ListMonad<A> ToListMonad<A>(this A value)
         {
@@ -128,7 +128,7 @@ namespace Monads
 
         #endregion
 
-        #region IMonad_Interface_Implementation
+        #region Monad base class implementation
 
         public override Monad<A> Fmap(Func<A, A> function)
         {
